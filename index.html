@@ -48,18 +48,26 @@
         const { useState, useEffect, useRef, useCallback } = React;
 
         function App() {
-            // Core State
+            // Core State - with localStorage fallback
             const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
             const [hoveredDay, setHoveredDay] = useState(null);
-            const [modifiche, setModifiche] = useState(() => JSON.parse(localStorage.getItem('turni-mod-2026') || '{}'));
-            const [note, setNote] = useState(() => JSON.parse(localStorage.getItem('turni-note-2026') || '{}'));
+            const [modifiche, setModifiche] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('turni-mod-2026') || '{}'); } catch(e) { return {}; }
+            });
+            const [note, setNote] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('turni-note-2026') || '{}'); } catch(e) { return {}; }
+            });
             const [showModal, setShowModal] = useState(false);
             const [selectedDay, setSelectedDay] = useState(null);
             const [modalNote, setModalNote] = useState('');
             
             // Advanced Features State
-            const [userName, setUserName] = useState(() => localStorage.getItem('turni-user') || '');
-            const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem('turni-user'));
+            const [userName, setUserName] = useState(() => {
+                try { return localStorage.getItem('turni-user') || ''; } catch(e) { return ''; }
+            });
+            const [showWelcome, setShowWelcome] = useState(() => {
+                try { return !localStorage.getItem('turni-user'); } catch(e) { return true; }
+            });
             const [shareCode, setShareCode] = useState('');
             const [importCode, setImportCode] = useState('');
             const [showShareModal, setShowShareModal] = useState(false);
@@ -69,7 +77,7 @@
             const [notification, setNotification] = useState(null);
             const [searchDate, setSearchDate] = useState('');
             const [darkMode, setDarkMode] = useState(true);
-            const [viewMode, setViewMode] = useState('calendar'); // calendar, list, timeline
+            const [viewMode, setViewMode] = useState('calendar');
             const [selectedRange, setSelectedRange] = useState({ start: null, end: null });
             const [isSelecting, setIsSelecting] = useState(false);
             const [showBulkModal, setShowBulkModal] = useState(false);
@@ -78,20 +86,29 @@
             const [countdownTarget, setCountdownTarget] = useState('');
             const [weather, setWeather] = useState(null);
             const [showPrintPreview, setShowPrintPreview] = useState(false);
-            const [colleagues, setColleagues] = useState(() => JSON.parse(localStorage.getItem('turni-colleagues') || '[]'));
+            const [colleagues, setColleagues] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('turni-colleagues') || '[]'); } catch(e) { return []; }
+            });
             const [showColleagueModal, setShowColleagueModal] = useState(false);
             const [newColleague, setNewColleague] = useState({ name: '', offset: 0 });
-            const [achievements, setAchievements] = useState(() => JSON.parse(localStorage.getItem('turni-achievements') || '[]'));
+            const [achievements, setAchievements] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('turni-achievements') || '[]'); } catch(e) { return []; }
+            });
             const [showAchievements, setShowAchievements] = useState(false);
             const [draggedDay, setDraggedDay] = useState(null);
             const [showQuickStats, setShowQuickStats] = useState(true);
             const [showMiniCalendar, setShowMiniCalendar] = useState(false);
-            const [reminderDays, setReminderDays] = useState(() => JSON.parse(localStorage.getItem('turni-reminders') || '[]'));
+            const [reminderDays, setReminderDays] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('turni-reminders') || '[]'); } catch(e) { return []; }
+            });
             const [showReminderModal, setShowReminderModal] = useState(false);
             const [currentReminder, setCurrentReminder] = useState('');
             const [filterType, setFilterType] = useState('all');
             const [showBackupModal, setShowBackupModal] = useState(false);
-            const [backupHistory, setBackupHistory] = useState(() => JSON.parse(localStorage.getItem('turni-backups') || '[]'));
+            const [backupHistory, setBackupHistory] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('turni-backups') || '[]'); } catch(e) { return []; }
+            });
+            const [lastSaved, setLastSaved] = useState(null);
             
             const chartRef = useRef(null);
             const chartInstance = useRef(null);
@@ -125,14 +142,34 @@
                 { tipo: "R", orario: "Riposo", lavoro: false, ore: 0 },
             ];
 
-            // Save to localStorage
-            useEffect(() => { localStorage.setItem('turni-mod-2026', JSON.stringify(modifiche)); }, [modifiche]);
-            useEffect(() => { localStorage.setItem('turni-note-2026', JSON.stringify(note)); }, [note]);
-            useEffect(() => { localStorage.setItem('turni-user', userName); }, [userName]);
-            useEffect(() => { localStorage.setItem('turni-colleagues', JSON.stringify(colleagues)); }, [colleagues]);
-            useEffect(() => { localStorage.setItem('turni-achievements', JSON.stringify(achievements)); }, [achievements]);
-            useEffect(() => { localStorage.setItem('turni-reminders', JSON.stringify(reminderDays)); }, [reminderDays]);
-            useEffect(() => { localStorage.setItem('turni-backups', JSON.stringify(backupHistory)); }, [backupHistory]);
+            // Save to localStorage with error handling
+            useEffect(() => { 
+                try { 
+                    localStorage.setItem('turni-mod-2026', JSON.stringify(modifiche)); 
+                    setLastSaved(new Date().toLocaleTimeString('it-IT'));
+                } catch(e) { console.log('LocalStorage not available'); } 
+            }, [modifiche]);
+            useEffect(() => { 
+                try { 
+                    localStorage.setItem('turni-note-2026', JSON.stringify(note)); 
+                    setLastSaved(new Date().toLocaleTimeString('it-IT'));
+                } catch(e) { console.log('LocalStorage not available'); } 
+            }, [note]);
+            useEffect(() => { 
+                try { localStorage.setItem('turni-user', userName); } catch(e) {} 
+            }, [userName]);
+            useEffect(() => { 
+                try { localStorage.setItem('turni-colleagues', JSON.stringify(colleagues)); } catch(e) {} 
+            }, [colleagues]);
+            useEffect(() => { 
+                try { localStorage.setItem('turni-achievements', JSON.stringify(achievements)); } catch(e) {} 
+            }, [achievements]);
+            useEffect(() => { 
+                try { localStorage.setItem('turni-reminders', JSON.stringify(reminderDays)); } catch(e) {} 
+            }, [reminderDays]);
+            useEffect(() => { 
+                try { localStorage.setItem('turni-backups', JSON.stringify(backupHistory)); } catch(e) {} 
+            }, [backupHistory]);
 
             // Countdown timer
             useEffect(() => {
@@ -629,6 +666,16 @@
                                 <span className="text-white text-sm">⚡ {stats.straordinario}</span>
                                 <span className="text-white text-sm">|</span>
                                 <span className="text-white text-sm">🏆 {achievements.length}</span>
+                                <span className="text-white text-sm">|</span>
+                                <span className="text-white text-sm">📝 {Object.keys(note).length} note</span>
+                                <span className="text-white text-sm">|</span>
+                                <span className="text-green-400 text-sm">✅ {Object.keys(modifiche).length} modifiche</span>
+                                {lastSaved && (
+                                    <>
+                                        <span className="text-white text-sm">|</span>
+                                        <span className="text-yellow-400 text-sm">💾 {lastSaved}</span>
+                                    </>
+                                )}
                             </div>
                         )}
 
@@ -729,6 +776,43 @@
                                 <div className="flex items-center gap-1"><div className="w-4 h-4 turno-trasferta rounded"></div><span className="text-gray-300">Tra</span></div>
                             </div>
                         </div>
+
+                        {/* Recent Changes Summary */}
+                        {Object.keys(modifiche).length > 0 && (
+                            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-4 mt-4 shadow-xl`}>
+                                <h3 className="text-white font-semibold mb-3">📋 Riepilogo Modifiche ({Object.keys(modifiche).length} totali):</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-40 overflow-y-auto">
+                                    {Object.entries(modifiche).slice(-12).reverse().map(([chiave, mod]) => {
+                                        const [m, g] = chiave.split('-').map(Number);
+                                        const tipo = tipiModifica.find(t => t.id === mod.tipo);
+                                        return (
+                                            <div key={chiave} className="bg-gray-700 px-3 py-2 rounded-lg flex justify-between items-center">
+                                                <span className="text-white text-sm">{g} {mesi[m].substring(0,3)}</span>
+                                                <span className="text-sm">{tipo?.emoji} {tipo?.nome}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Notes Summary */}
+                        {Object.keys(note).length > 0 && (
+                            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-4 mt-4 shadow-xl`}>
+                                <h3 className="text-white font-semibold mb-3">📝 Note Recenti ({Object.keys(note).length} totali):</h3>
+                                <div className="space-y-2 max-h-40 overflow-y-auto">
+                                    {Object.entries(note).slice(-5).reverse().map(([chiave, testo]) => {
+                                        const [m, g] = chiave.split('-').map(Number);
+                                        return (
+                                            <div key={chiave} className="bg-gray-700 px-3 py-2 rounded-lg">
+                                                <p className="text-yellow-400 text-sm font-semibold">{g} {mesi[m]}</p>
+                                                <p className="text-gray-300 text-sm">{testo}</p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Modals */}
