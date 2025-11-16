@@ -3,67 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turni 4ª Squadra 2026</title>
+    <title>Turni 4ª Squadra 2026 - Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        .turno-mat { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
-        .turno-pom { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
-        .turno-not { background: linear-gradient(135deg, #a78bfa, #8b5cf6); }
-        .turno-riposo { background: linear-gradient(135deg, #34d399, #10b981); }
+        body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+        .turno-mat { background: #f59e0b; }
+        .turno-pom { background: #3b82f6; }
+        .turno-not { background: #8b5cf6; }
+        .turno-riposo { background: #10b981; }
+        .turno-ferie { background: #ec4899; }
+        .turno-permesso { background: #f97316; }
+        .turno-malattia { background: #ef4444; }
+        .turno-straordinario { background: #06b6d4; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+        }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-slate-50">
     <div id="root"></div>
     
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
 
         function App() {
+            // State principale
             const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-            const [hoveredDay, setHoveredDay] = useState(null);
-            const [showLegend, setShowLegend] = useState(true);
+            const [selectedDay, setSelectedDay] = useState(null);
+            const [showModal, setShowModal] = useState(false);
+            const [showStats, setShowStats] = useState(false);
+            const [showSearch, setShowSearch] = useState(false);
+            const [searchDate, setSearchDate] = useState('');
+            const [ferieDisponibili, setFerieDisponibili] = useState(26);
+            const [permessiDisponibili, setPermessiDisponibili] = useState(32);
+            const [toast, setToast] = useState(null);
+            
+            // Modifiche ai giorni (salvate in localStorage)
+            const [modifiche, setModifiche] = useState(() => {
+                const saved = localStorage.getItem('turni-modifiche-2026');
+                return saved ? JSON.parse(saved) : {};
+            });
+
+            // Salva automaticamente
+            useEffect(() => {
+                localStorage.setItem('turni-modifiche-2026', JSON.stringify(modifiche));
+            }, [modifiche]);
+
+            // Toast notification
+            const showToast = (message, type = 'success') => {
+                setToast({ message, type });
+                setTimeout(() => setToast(null), 3000);
+            };
 
             const mesi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", 
                          "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
             const giorniMese = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
             const giorniSettimana = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
-            
-            // Primo giorno di ogni mese nel 2026 (0=Lun, 1=Mar, ..., 6=Dom)
             const primoGiornoMese = [3, 6, 6, 2, 4, 0, 2, 5, 1, 3, 6, 1];
 
-            // Ciclo turni: 3 Pom, 1 R, 3 Mat, 1 R, 3 Not, 1 R (12 giorni)
             const ciclo = [
-                { tipo: "Pom", orario: "14:00-22:00", lavoro: true },
-                { tipo: "Pom", orario: "14:00-22:00", lavoro: true },
-                { tipo: "Pom", orario: "14:00-22:00", lavoro: true },
-                { tipo: "R", orario: "Riposo", lavoro: false },
-                { tipo: "Mat", orario: "06:00-14:00", lavoro: true },
-                { tipo: "Mat", orario: "06:00-14:00", lavoro: true },
-                { tipo: "Mat", orario: "06:00-14:00", lavoro: true },
-                { tipo: "R", orario: "Riposo", lavoro: false },
-                { tipo: "Not", orario: "22:00-06:00", lavoro: true },
-                { tipo: "Not", orario: "22:00-06:00", lavoro: true },
-                { tipo: "Not", orario: "22:00-06:00", lavoro: true },
-                { tipo: "R", orario: "Riposo", lavoro: false },
+                { tipo: "Pom", orario: "14:00-22:00", ore: 8 },
+                { tipo: "Pom", orario: "14:00-22:00", ore: 8 },
+                { tipo: "Pom", orario: "14:00-22:00", ore: 8 },
+                { tipo: "R", orario: "Riposo", ore: 0 },
+                { tipo: "Mat", orario: "06:00-14:00", ore: 8 },
+                { tipo: "Mat", orario: "06:00-14:00", ore: 8 },
+                { tipo: "Mat", orario: "06:00-14:00", ore: 8 },
+                { tipo: "R", orario: "Riposo", ore: 0 },
+                { tipo: "Not", orario: "22:00-06:00", ore: 8 },
+                { tipo: "Not", orario: "22:00-06:00", ore: 8 },
+                { tipo: "Not", orario: "22:00-06:00", ore: 8 },
+                { tipo: "R", orario: "Riposo", ore: 0 },
             ];
 
-            const getTurnoGiorno = (meseIdx, giorno) => {
-                // Calcola il giorno dell'anno
+            const tipiModifica = [
+                { id: 'ferie', nome: 'Ferie', colore: 'turno-ferie', icon: '🏖️', ore: 8 },
+                { id: 'permesso', nome: 'Permesso', colore: 'turno-permesso', icon: '📋', ore: 8 },
+                { id: 'malattia', nome: 'Malattia', colore: 'turno-malattia', icon: '🤒', ore: 8 },
+                { id: 'straordinario', nome: 'Straordinario', colore: 'turno-straordinario', icon: '⏰', ore: 4 },
+            ];
+
+            const getTurnoBase = (meseIdx, giorno) => {
                 let giornoAnno = giorno;
                 for (let i = 0; i < meseIdx; i++) {
                     giornoAnno += giorniMese[i];
                 }
-                // Il 1° gennaio 2026 è il 4° giorno del ciclo (indice 3)
                 const indiceCiclo = (giornoAnno - 1 + 3) % 12;
                 return ciclo[indiceCiclo];
             };
 
-            const getTurnoClass = (tipo) => {
-                switch(tipo) {
+            const getChiaveGiorno = (meseIdx, giorno) => `${meseIdx}-${giorno}`;
+
+            const getTurnoEffettivo = (meseIdx, giorno) => {
+                const chiave = getChiaveGiorno(meseIdx, giorno);
+                const modifica = modifiche[chiave];
+                if (modifica) {
+                    const tipoMod = tipiModifica.find(t => t.id === modifica.tipo);
+                    return {
+                        ...getTurnoBase(meseIdx, giorno),
+                        modificato: true,
+                        tipoModifica: modifica.tipo,
+                        nota: modifica.nota,
+                        coloreModifica: tipoMod?.colore,
+                        iconModifica: tipoMod?.icon,
+                        nomeModifica: tipoMod?.nome
+                    };
+                }
+                return getTurnoBase(meseIdx, giorno);
+            };
+
+            const getTurnoClass = (turno) => {
+                if (turno.modificato) return turno.coloreModifica + ' text-white';
+                switch(turno.tipo) {
                     case "Mat": return "turno-mat text-white";
                     case "Pom": return "turno-pom text-white";
                     case "Not": return "turno-not text-white";
@@ -73,12 +133,26 @@
             };
 
             const calcolaStatistiche = () => {
-                let stats = { Mat: 0, Pom: 0, Not: 0, R: 0, totale: 0 };
+                let stats = { 
+                    Mat: 0, Pom: 0, Not: 0, R: 0, 
+                    ferie: 0, permesso: 0, malattia: 0, straordinario: 0,
+                    oreTotali: 0, giorniLavorati: 0
+                };
+                
                 for (let m = 0; m < 12; m++) {
                     for (let g = 1; g <= giorniMese[m]; g++) {
-                        const turno = getTurnoGiorno(m, g);
-                        stats[turno.tipo]++;
-                        if (turno.lavoro) stats.totale++;
+                        const turno = getTurnoEffettivo(m, g);
+                        if (turno.modificato) {
+                            stats[turno.tipoModifica]++;
+                            if (turno.tipoModifica === 'straordinario') {
+                                stats.oreTotali += getTurnoBase(m, g).ore + 4;
+                                if (getTurnoBase(m, g).ore > 0) stats.giorniLavorati++;
+                            }
+                        } else {
+                            stats[turno.tipo]++;
+                            stats.oreTotali += turno.ore;
+                            if (turno.ore > 0) stats.giorniLavorati++;
+                        }
                     }
                 }
                 return stats;
@@ -86,112 +160,218 @@
 
             const stats = calcolaStatistiche();
 
+            const aggiungiModifica = (tipo, nota = '') => {
+                if (!selectedDay) return;
+                
+                const chiave = getChiaveGiorno(selectedMonth, selectedDay);
+                
+                // Controlla disponibilità
+                if (tipo === 'ferie' && stats.ferie >= ferieDisponibili) {
+                    showToast('Ferie esaurite!', 'error');
+                    return;
+                }
+                if (tipo === 'permesso' && stats.permesso >= permessiDisponibili) {
+                    showToast('Permessi esauriti!', 'error');
+                    return;
+                }
+
+                setModifiche(prev => ({
+                    ...prev,
+                    [chiave]: { tipo, nota, data: new Date().toISOString() }
+                }));
+                
+                showToast(`${tipiModifica.find(t => t.id === tipo)?.nome} aggiunto!`);
+                setShowModal(false);
+            };
+
+            const rimuoviModifica = () => {
+                if (!selectedDay) return;
+                const chiave = getChiaveGiorno(selectedMonth, selectedDay);
+                setModifiche(prev => {
+                    const nuovo = { ...prev };
+                    delete nuovo[chiave];
+                    return nuovo;
+                });
+                showToast('Modifica rimossa');
+                setShowModal(false);
+            };
+
+            const cercaData = () => {
+                if (!searchDate) return;
+                const [anno, mese, giorno] = searchDate.split('-').map(Number);
+                if (anno === 2026 && mese >= 1 && mese <= 12) {
+                    setSelectedMonth(mese - 1);
+                    setSelectedDay(giorno);
+                    setShowSearch(false);
+                    showToast(`Trovato: ${giorno} ${mesi[mese-1]} 2026`);
+                }
+            };
+
+            const esportaJSON = () => {
+                const data = {
+                    versione: '2.0',
+                    dataExport: new Date().toISOString(),
+                    ferieDisponibili,
+                    permessiDisponibili,
+                    modifiche,
+                    statistiche: stats
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'turni-2026-backup.json';
+                a.click();
+                showToast('Backup esportato!');
+            };
+
             const renderCalendario = () => {
                 const giorni = [];
                 const primoGiorno = primoGiornoMese[selectedMonth];
                 const numGiorni = giorniMese[selectedMonth];
 
-                // Celle vuote prima del primo giorno
                 for (let i = 0; i < primoGiorno; i++) {
-                    giorni.push(<div key={`empty-${i}`} className="h-16 md:h-20"></div>);
+                    giorni.push(<div key={`empty-${i}`} className="h-20"></div>);
                 }
 
-                // Giorni del mese
                 for (let giorno = 1; giorno <= numGiorni; giorno++) {
-                    const turno = getTurnoGiorno(selectedMonth, giorno);
-                    const isHovered = hoveredDay === giorno;
+                    const turno = getTurnoEffettivo(selectedMonth, giorno);
+                    const isSelected = selectedDay === giorno;
                     
                     giorni.push(
                         <div
                             key={giorno}
-                            className={`h-16 md:h-20 rounded-lg ${getTurnoClass(turno.tipo)} 
+                            onClick={() => { setSelectedDay(giorno); setShowModal(true); }}
+                            className={`h-20 rounded-lg ${getTurnoClass(turno)} 
                                        flex flex-col items-center justify-center cursor-pointer
-                                       transform transition-all duration-200 hover:scale-105 hover:shadow-lg
-                                       ${isHovered ? 'ring-4 ring-white ring-opacity-50' : ''}`}
-                            onMouseEnter={() => setHoveredDay(giorno)}
-                            onMouseLeave={() => setHoveredDay(null)}
+                                       transition-all duration-200 hover:scale-105 hover:shadow-xl
+                                       relative ${isSelected ? 'ring-4 ring-yellow-400' : ''}`}
                         >
                             <span className="text-lg font-bold">{giorno}</span>
-                            <span className="text-sm font-semibold">{turno.tipo}</span>
-                            {isHovered && (
-                                <span className="text-xs mt-1 opacity-90">{turno.orario}</span>
+                            {turno.modificato ? (
+                                <>
+                                    <span className="text-xl">{turno.iconModifica}</span>
+                                    <span className="text-xs font-medium">{turno.nomeModifica}</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="text-sm font-semibold">{turno.tipo}</span>
+                                    <span className="text-xs opacity-80">{turno.orario}</span>
+                                </>
+                            )}
+                            {turno.nota && (
+                                <div className="absolute top-1 right-1 w-2 h-2 bg-yellow-300 rounded-full pulse"></div>
                             )}
                         </div>
                     );
                 }
-
                 return giorni;
             };
 
             return (
-                <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8">
-                    <div className="max-w-6xl mx-auto">
+                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+                    {/* Toast */}
+                    {toast && (
+                        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-xl text-white font-medium
+                                        ${toast.type === 'error' ? 'bg-red-500' : 'bg-green-500'}
+                                        animate-bounce`}>
+                            {toast.message}
+                        </div>
+                    )}
+
+                    <div className="max-w-7xl mx-auto">
                         {/* Header */}
-                        <div className="text-center mb-8">
-                            <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-                                🗓️ Turni 4ª Squadra 2026
-                            </h1>
-                            <p className="text-gray-400">Calendario interattivo dei turni di lavoro</p>
+                        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+                            <div>
+                                <h1 className="text-3xl md:text-4xl font-bold text-white mb-1">
+                                    🗓️ Turni 4ª Squadra 2026
+                                </h1>
+                                <p className="text-slate-400">Gestione completa turni, ferie e permessi</p>
+                            </div>
+                            <div className="flex gap-2 mt-4 md:mt-0 no-print">
+                                <button
+                                    onClick={() => setShowSearch(true)}
+                                    className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition-colors"
+                                >
+                                    🔍 Cerca
+                                </button>
+                                <button
+                                    onClick={() => setShowStats(true)}
+                                    className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-colors"
+                                >
+                                    📊 Statistiche
+                                </button>
+                                <button
+                                    onClick={esportaJSON}
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg transition-colors"
+                                >
+                                    💾 Backup
+                                </button>
+                                <button
+                                    onClick={() => window.print()}
+                                    className="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg transition-colors"
+                                >
+                                    🖨️ Stampa
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Statistiche annuali */}
-                        <div className="bg-gray-800 rounded-xl p-4 mb-6 shadow-xl">
-                            <div className="flex flex-wrap justify-center gap-4">
-                                <div className="bg-gray-700 rounded-lg px-4 py-2">
-                                    <span className="text-gray-400 text-sm">Totale Lavoro</span>
-                                    <p className="text-2xl font-bold text-white">{stats.totale} giorni</p>
-                                </div>
-                                <div className="turno-mat rounded-lg px-4 py-2">
-                                    <span className="text-white text-sm opacity-80">Mattina</span>
-                                    <p className="text-2xl font-bold text-white">{stats.Mat}</p>
-                                </div>
-                                <div className="turno-pom rounded-lg px-4 py-2">
-                                    <span className="text-white text-sm opacity-80">Pomeriggio</span>
-                                    <p className="text-2xl font-bold text-white">{stats.Pom}</p>
-                                </div>
-                                <div className="turno-not rounded-lg px-4 py-2">
-                                    <span className="text-white text-sm opacity-80">Notte</span>
-                                    <p className="text-2xl font-bold text-white">{stats.Not}</p>
-                                </div>
-                                <div className="turno-riposo rounded-lg px-4 py-2">
-                                    <span className="text-white text-sm opacity-80">Riposi</span>
-                                    <p className="text-2xl font-bold text-white">{stats.R}</p>
-                                </div>
+                        {/* Dashboard rapido */}
+                        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
+                            <div className="bg-slate-800 rounded-xl p-3 text-center">
+                                <p className="text-slate-400 text-xs">Ore Lavorate</p>
+                                <p className="text-2xl font-bold text-white">{stats.oreTotali}</p>
+                            </div>
+                            <div className="bg-slate-800 rounded-xl p-3 text-center">
+                                <p className="text-slate-400 text-xs">Giorni Lavoro</p>
+                                <p className="text-2xl font-bold text-white">{stats.giorniLavorati}</p>
+                            </div>
+                            <div className="bg-pink-600 rounded-xl p-3 text-center">
+                                <p className="text-pink-200 text-xs">Ferie Usate</p>
+                                <p className="text-2xl font-bold text-white">{stats.ferie}/{ferieDisponibili}</p>
+                            </div>
+                            <div className="bg-orange-600 rounded-xl p-3 text-center">
+                                <p className="text-orange-200 text-xs">Permessi Usati</p>
+                                <p className="text-2xl font-bold text-white">{stats.permesso}/{permessiDisponibili}</p>
+                            </div>
+                            <div className="bg-red-600 rounded-xl p-3 text-center">
+                                <p className="text-red-200 text-xs">Malattia</p>
+                                <p className="text-2xl font-bold text-white">{stats.malattia}</p>
+                            </div>
+                            <div className="bg-cyan-600 rounded-xl p-3 text-center">
+                                <p className="text-cyan-200 text-xs">Straordinari</p>
+                                <p className="text-2xl font-bold text-white">{stats.straordinario}</p>
                             </div>
                         </div>
 
                         {/* Selettore mese */}
-                        <div className="bg-gray-800 rounded-xl p-4 mb-6 shadow-xl">
-                            <div className="flex items-center justify-between mb-4">
+                        <div className="bg-slate-800 rounded-xl p-4 mb-6 no-print">
+                            <div className="flex items-center justify-between mb-3">
                                 <button
                                     onClick={() => setSelectedMonth(Math.max(0, selectedMonth - 1))}
-                                    className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
-                                    disabled={selectedMonth === 0}
+                                    className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg"
                                 >
-                                    ◀ Precedente
+                                    ◀
                                 </button>
-                                <h2 className="text-2xl md:text-3xl font-bold text-white">
+                                <h2 className="text-2xl font-bold text-white">
                                     {mesi[selectedMonth]} 2026
                                 </h2>
                                 <button
                                     onClick={() => setSelectedMonth(Math.min(11, selectedMonth + 1))}
-                                    className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
-                                    disabled={selectedMonth === 11}
+                                    className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg"
                                 >
-                                    Successivo ▶
+                                    ▶
                                 </button>
                             </div>
-
-                            {/* Navigazione rapida mesi */}
-                            <div className="flex flex-wrap justify-center gap-2">
+                            <div className="flex flex-wrap justify-center gap-1">
                                 {mesi.map((mese, idx) => (
                                     <button
                                         key={mese}
                                         onClick={() => setSelectedMonth(idx)}
-                                        className={`px-3 py-1 rounded text-sm transition-colors
+                                        className={`px-2 py-1 rounded text-xs transition-colors
                                                    ${selectedMonth === idx 
                                                      ? 'bg-blue-600 text-white' 
-                                                     : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                                                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
                                     >
                                         {mese.substring(0, 3)}
                                     </button>
@@ -200,64 +380,205 @@
                         </div>
 
                         {/* Calendario */}
-                        <div className="bg-gray-800 rounded-xl p-4 md:p-6 shadow-xl">
-                            {/* Intestazione giorni settimana */}
-                            <div className="grid grid-cols-7 gap-2 mb-4">
+                        <div className="bg-slate-800 rounded-xl p-4">
+                            <div className="grid grid-cols-7 gap-2 mb-3">
                                 {giorniSettimana.map(giorno => (
-                                    <div key={giorno} className="text-center text-gray-400 font-semibold py-2">
+                                    <div key={giorno} className="text-center text-slate-400 font-semibold text-sm py-1">
                                         {giorno}
                                     </div>
                                 ))}
                             </div>
-
-                            {/* Griglia calendario */}
                             <div className="grid grid-cols-7 gap-2">
                                 {renderCalendario()}
                             </div>
                         </div>
 
                         {/* Legenda */}
-                        {showLegend && (
-                            <div className="bg-gray-800 rounded-xl p-4 mt-6 shadow-xl">
-                                <h3 className="text-white font-semibold mb-3">Legenda Turni:</h3>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 turno-mat rounded"></div>
-                                        <div className="text-gray-300">
-                                            <p className="font-semibold">Mattina</p>
-                                            <p className="text-xs">06:00 - 14:00</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 turno-pom rounded"></div>
-                                        <div className="text-gray-300">
-                                            <p className="font-semibold">Pomeriggio</p>
-                                            <p className="text-xs">14:00 - 22:00</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 turno-not rounded"></div>
-                                        <div className="text-gray-300">
-                                            <p className="font-semibold">Notte</p>
-                                            <p className="text-xs">22:00 - 06:00</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 turno-riposo rounded"></div>
-                                        <div className="text-gray-300">
-                                            <p className="font-semibold">Riposo</p>
-                                            <p className="text-xs">Giorno libero</p>
-                                        </div>
-                                    </div>
+                        <div className="bg-slate-800 rounded-xl p-4 mt-6">
+                            <h3 className="text-white font-semibold mb-3">Legenda:</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 turno-mat rounded"></div>
+                                    <span className="text-slate-300 text-sm">Mattina</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 turno-pom rounded"></div>
+                                    <span className="text-slate-300 text-sm">Pomeriggio</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 turno-not rounded"></div>
+                                    <span className="text-slate-300 text-sm">Notte</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 turno-riposo rounded"></div>
+                                    <span className="text-slate-300 text-sm">Riposo</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 turno-ferie rounded"></div>
+                                    <span className="text-slate-300 text-sm">Ferie</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 turno-permesso rounded"></div>
+                                    <span className="text-slate-300 text-sm">Permesso</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 turno-malattia rounded"></div>
+                                    <span className="text-slate-300 text-sm">Malattia</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 turno-straordinario rounded"></div>
+                                    <span className="text-slate-300 text-sm">Straordinario</span>
                                 </div>
                             </div>
-                        )}
-
-                        {/* Footer */}
-                        <div className="text-center mt-6 text-gray-500 text-sm">
-                            <p>Passa il mouse sui giorni per vedere gli orari • Clicca sui mesi per navigare</p>
                         </div>
                     </div>
+
+                    {/* Modal Modifica Giorno */}
+                    {showModal && selectedDay && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-4">
+                            <div className="bg-slate-800 rounded-xl p-6 max-w-md w-full">
+                                <h3 className="text-xl font-bold text-white mb-4">
+                                    {selectedDay} {mesi[selectedMonth]} 2026
+                                </h3>
+                                
+                                <div className="mb-4">
+                                    <p className="text-slate-400 text-sm mb-2">Turno base:</p>
+                                    <p className="text-white font-medium">
+                                        {getTurnoBase(selectedMonth, selectedDay).tipo} - {getTurnoBase(selectedMonth, selectedDay).orario}
+                                    </p>
+                                </div>
+
+                                <div className="mb-4">
+                                    <p className="text-slate-400 text-sm mb-2">Segna come:</p>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {tipiModifica.map(tipo => (
+                                            <button
+                                                key={tipo.id}
+                                                onClick={() => aggiungiModifica(tipo.id)}
+                                                className={`${tipo.colore} text-white p-3 rounded-lg hover:opacity-90 transition-opacity`}
+                                            >
+                                                <span className="text-xl mr-2">{tipo.icon}</span>
+                                                {tipo.nome}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {modifiche[getChiaveGiorno(selectedMonth, selectedDay)] && (
+                                    <button
+                                        onClick={rimuoviModifica}
+                                        className="w-full bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-lg mb-4"
+                                    >
+                                        🗑️ Rimuovi modifica
+                                    </button>
+                                )}
+
+                                <button
+                                    onClick={() => setShowModal(false)}
+                                    className="w-full bg-slate-600 hover:bg-slate-500 text-white p-2 rounded-lg"
+                                >
+                                    Chiudi
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal Statistiche */}
+                    {showStats && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-4">
+                            <div className="bg-slate-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                                <h3 className="text-2xl font-bold text-white mb-6">📊 Statistiche Annuali 2026</h3>
+                                
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                                    <div className="bg-slate-700 p-4 rounded-lg">
+                                        <p className="text-slate-400 text-sm">Ore Totali</p>
+                                        <p className="text-3xl font-bold text-white">{stats.oreTotali}</p>
+                                    </div>
+                                    <div className="bg-slate-700 p-4 rounded-lg">
+                                        <p className="text-slate-400 text-sm">Giorni Lavorati</p>
+                                        <p className="text-3xl font-bold text-white">{stats.giorniLavorati}</p>
+                                    </div>
+                                    <div className="bg-slate-700 p-4 rounded-lg">
+                                        <p className="text-slate-400 text-sm">Media Ore/Mese</p>
+                                        <p className="text-3xl font-bold text-white">{Math.round(stats.oreTotali / 12)}</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3 mb-6">
+                                    <div className="flex justify-between items-center bg-amber-500 bg-opacity-20 p-3 rounded">
+                                        <span className="text-amber-300">Turni Mattina</span>
+                                        <span className="text-white font-bold">{stats.Mat}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center bg-blue-500 bg-opacity-20 p-3 rounded">
+                                        <span className="text-blue-300">Turni Pomeriggio</span>
+                                        <span className="text-white font-bold">{stats.Pom}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center bg-purple-500 bg-opacity-20 p-3 rounded">
+                                        <span className="text-purple-300">Turni Notte</span>
+                                        <span className="text-white font-bold">{stats.Not}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center bg-green-500 bg-opacity-20 p-3 rounded">
+                                        <span className="text-green-300">Giorni Riposo</span>
+                                        <span className="text-white font-bold">{stats.R}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center bg-pink-500 bg-opacity-20 p-3 rounded">
+                                        <span className="text-pink-300">Ferie Utilizzate</span>
+                                        <span className="text-white font-bold">{stats.ferie} / {ferieDisponibili}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center bg-orange-500 bg-opacity-20 p-3 rounded">
+                                        <span className="text-orange-300">Permessi Utilizzati</span>
+                                        <span className="text-white font-bold">{stats.permesso} / {permessiDisponibili}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center bg-red-500 bg-opacity-20 p-3 rounded">
+                                        <span className="text-red-300">Giorni Malattia</span>
+                                        <span className="text-white font-bold">{stats.malattia}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center bg-cyan-500 bg-opacity-20 p-3 rounded">
+                                        <span className="text-cyan-300">Straordinari</span>
+                                        <span className="text-white font-bold">{stats.straordinario} ({stats.straordinario * 4}h)</span>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => setShowStats(false)}
+                                    className="w-full bg-slate-600 hover:bg-slate-500 text-white p-3 rounded-lg font-medium"
+                                >
+                                    Chiudi
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal Ricerca */}
+                    {showSearch && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-4">
+                            <div className="bg-slate-800 rounded-xl p-6 max-w-md w-full">
+                                <h3 className="text-xl font-bold text-white mb-4">🔍 Cerca Data</h3>
+                                <input
+                                    type="date"
+                                    value={searchDate}
+                                    onChange={(e) => setSearchDate(e.target.value)}
+                                    min="2026-01-01"
+                                    max="2026-12-31"
+                                    className="w-full bg-slate-700 text-white p-3 rounded-lg mb-4"
+                                />
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={cercaData}
+                                        className="flex-1 bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-lg"
+                                    >
+                                        Cerca
+                                    </button>
+                                    <button
+                                        onClick={() => setShowSearch(false)}
+                                        className="flex-1 bg-slate-600 hover:bg-slate-500 text-white p-2 rounded-lg"
+                                    >
+                                        Chiudi
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         }
