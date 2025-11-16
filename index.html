@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turni 4ª Squadra 2026 - Pro Edition</title>
+    <title>Turni 4ª Squadra 2026 - Ultra Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
     <style>
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         .turno-mat { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
@@ -18,95 +19,166 @@
         .turno-permesso { background: linear-gradient(135deg, #fcd34d, #fbbf24); }
         .turno-malattia { background: linear-gradient(135deg, #f87171, #ef4444); }
         .turno-straordinario { background: linear-gradient(135deg, #fb923c, #f97316); }
-        .modal-backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
+        .turno-104 { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+        .turno-donazione { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+        .turno-congedo { background: linear-gradient(135deg, #65a30d, #4d7c0f); }
+        .modal-backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); }
+        .glass { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); background-size: 200% 100%; animation: shimmer 2s infinite; }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .float { animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+        .pulse-border { animation: pulse-border 2s infinite; }
+        @keyframes pulse-border { 0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 50% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); } }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-900">
     <div id="root"></div>
     
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef, useMemo } = React;
 
         function App() {
             const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
             const [hoveredDay, setHoveredDay] = useState(null);
             const [modifiche, setModifiche] = useState(() => {
-                const saved = localStorage.getItem('turni-modifiche-2026');
+                const saved = localStorage.getItem('turni-ultra-2026');
                 return saved ? JSON.parse(saved) : {};
             });
             const [note, setNote] = useState(() => {
-                const saved = localStorage.getItem('turni-note-2026');
+                const saved = localStorage.getItem('turni-note-ultra-2026');
                 return saved ? JSON.parse(saved) : {};
             });
             const [showModal, setShowModal] = useState(false);
             const [selectedDay, setSelectedDay] = useState(null);
             const [modalNote, setModalNote] = useState('');
-            const [showExportModal, setShowExportModal] = useState(false);
-            const [showStatsModal, setShowStatsModal] = useState(false);
+            const [activeTab, setActiveTab] = useState('calendario');
             const [notification, setNotification] = useState(null);
             const [searchDate, setSearchDate] = useState('');
-            const [darkMode, setDarkMode] = useState(true);
-            const [showHelp, setShowHelp] = useState(false);
+            const [showShareModal, setShowShareModal] = useState(false);
+            const [stipendioBase, setStipendioBase] = useState(() => {
+                const saved = localStorage.getItem('turni-stipendio-2026');
+                return saved ? parseFloat(saved) : 1800;
+            });
+            const [configStipenio, setConfigStipendio] = useState(() => {
+                const saved = localStorage.getItem('turni-config-stipendio-2026');
+                return saved ? JSON.parse(saved) : {
+                    bonusNotte: 15,
+                    bonusStraordinario: 25,
+                    bonusFestivo: 30,
+                    trattenutaMalattia: 0,
+                    trattenutaPermesso: 0
+                };
+            });
+            const [viewMode, setViewMode] = useState('month');
+            const [selectedRange, setSelectedRange] = useState({ start: null, end: null });
+            const [isSelecting, setIsSelecting] = useState(false);
+            const [showConfigModal, setShowConfigModal] = useState(false);
+            const [colleghi, setColleghi] = useState(() => {
+                const saved = localStorage.getItem('turni-colleghi-2026');
+                return saved ? JSON.parse(saved) : [];
+            });
+            const [showColleghiModal, setShowColleghiModal] = useState(false);
+            const [nuovoCollega, setNuovoCollega] = useState({ nome: '', offset: 0 });
+            const [showCompareModal, setShowCompareModal] = useState(false);
+            const [selectedCollega, setSelectedCollega] = useState(null);
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
 
-            const mesi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", 
-                         "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+            const mesi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
             const giorniMese = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
             const giorniSettimana = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
             const primoGiornoMese = [3, 6, 6, 2, 4, 0, 2, 5, 1, 3, 6, 1];
+            const festivita = ['1-1', '1-6', '4-13', '4-25', '5-1', '6-2', '8-15', '11-1', '12-8', '12-25', '12-26'];
 
             const tipiModifica = [
-                { id: 'ferie', nome: 'Ferie', emoji: '🏖️', classe: 'turno-ferie' },
-                { id: 'permesso', nome: 'Permesso', emoji: '📋', classe: 'turno-permesso' },
-                { id: 'malattia', nome: 'Malattia', emoji: '🤒', classe: 'turno-malattia' },
-                { id: 'straordinario', nome: 'Straordinario', emoji: '⚡', classe: 'turno-straordinario' },
+                { id: 'ferie', nome: 'Ferie', emoji: '🏖️', classe: 'turno-ferie', desc: 'Giorni di ferie annuali' },
+                { id: 'permesso', nome: 'Permesso', emoji: '📋', classe: 'turno-permesso', desc: 'Permesso retribuito' },
+                { id: 'malattia', nome: 'Malattia', emoji: '🤒', classe: 'turno-malattia', desc: 'Assenza per malattia' },
+                { id: 'straordinario', nome: 'Straordinario', emoji: '⚡', classe: 'turno-straordinario', desc: 'Lavoro extra' },
+                { id: '104', nome: 'Legge 104', emoji: '♿', classe: 'turno-104', desc: 'Permesso L.104' },
+                { id: 'donazione', nome: 'Donazione Sangue', emoji: '🩸', classe: 'turno-donazione', desc: 'Giorno donazione' },
+                { id: 'congedo', nome: 'Congedo', emoji: '👶', classe: 'turno-congedo', desc: 'Congedo parentale' },
             ];
 
             const ciclo = [
-                { tipo: "Pom", orario: "14:00-22:00", lavoro: true },
-                { tipo: "Pom", orario: "14:00-22:00", lavoro: true },
-                { tipo: "Pom", orario: "14:00-22:00", lavoro: true },
-                { tipo: "R", orario: "Riposo", lavoro: false },
-                { tipo: "Mat", orario: "06:00-14:00", lavoro: true },
-                { tipo: "Mat", orario: "06:00-14:00", lavoro: true },
-                { tipo: "Mat", orario: "06:00-14:00", lavoro: true },
-                { tipo: "R", orario: "Riposo", lavoro: false },
-                { tipo: "Not", orario: "22:00-06:00", lavoro: true },
-                { tipo: "Not", orario: "22:00-06:00", lavoro: true },
-                { tipo: "Not", orario: "22:00-06:00", lavoro: true },
-                { tipo: "R", orario: "Riposo", lavoro: false },
+                { tipo: "Pom", orario: "14:00-22:00", lavoro: true, ore: 8 },
+                { tipo: "Pom", orario: "14:00-22:00", lavoro: true, ore: 8 },
+                { tipo: "Pom", orario: "14:00-22:00", lavoro: true, ore: 8 },
+                { tipo: "R", orario: "Riposo", lavoro: false, ore: 0 },
+                { tipo: "Mat", orario: "06:00-14:00", lavoro: true, ore: 8 },
+                { tipo: "Mat", orario: "06:00-14:00", lavoro: true, ore: 8 },
+                { tipo: "Mat", orario: "06:00-14:00", lavoro: true, ore: 8 },
+                { tipo: "R", orario: "Riposo", lavoro: false, ore: 0 },
+                { tipo: "Not", orario: "22:00-06:00", lavoro: true, ore: 8 },
+                { tipo: "Not", orario: "22:00-06:00", lavoro: true, ore: 8 },
+                { tipo: "Not", orario: "22:00-06:00", lavoro: true, ore: 8 },
+                { tipo: "R", orario: "Riposo", lavoro: false, ore: 0 },
             ];
 
             useEffect(() => {
-                localStorage.setItem('turni-modifiche-2026', JSON.stringify(modifiche));
+                localStorage.setItem('turni-ultra-2026', JSON.stringify(modifiche));
             }, [modifiche]);
 
             useEffect(() => {
-                localStorage.setItem('turni-note-2026', JSON.stringify(note));
+                localStorage.setItem('turni-note-ultra-2026', JSON.stringify(note));
             }, [note]);
+
+            useEffect(() => {
+                localStorage.setItem('turni-stipendio-2026', stipendioBase.toString());
+            }, [stipendioBase]);
+
+            useEffect(() => {
+                localStorage.setItem('turni-config-stipendio-2026', JSON.stringify(configStipenio));
+            }, [configStipenio]);
+
+            useEffect(() => {
+                localStorage.setItem('turni-colleghi-2026', JSON.stringify(colleghi));
+            }, [colleghi]);
+
+            useEffect(() => {
+                const params = new URLSearchParams(window.location.search);
+                const sharedData = params.get('data');
+                if (sharedData) {
+                    try {
+                        const decoded = JSON.parse(atob(sharedData));
+                        if (decoded.modifiche) setModifiche(decoded.modifiche);
+                        if (decoded.note) setNote(decoded.note);
+                        showNotification('📥 Dati importati dal link condiviso!');
+                        window.history.replaceState({}, '', window.location.pathname);
+                    } catch (e) {
+                        console.error('Errore import:', e);
+                    }
+                }
+            }, []);
 
             const showNotification = (message, type = 'success') => {
                 setNotification({ message, type });
                 setTimeout(() => setNotification(null), 3000);
             };
 
-            const getTurnoBase = (meseIdx, giorno) => {
+            const getTurnoBase = (meseIdx, giorno, offset = 0) => {
                 let giornoAnno = giorno;
-                for (let i = 0; i < meseIdx; i++) {
-                    giornoAnno += giorniMese[i];
-                }
-                const indiceCiclo = (giornoAnno - 1 + 3) % 12;
-                return ciclo[indiceCiclo];
+                for (let i = 0; i < meseIdx; i++) giornoAnno += giorniMese[i];
+                const indiceCiclo = (giornoAnno - 1 + 3 + offset) % 12;
+                return ciclo[indiceCiclo >= 0 ? indiceCiclo : indiceCiclo + 12];
             };
 
             const getChiaveGiorno = (meseIdx, giorno) => `${meseIdx}-${giorno}`;
 
+            const isFestivo = (meseIdx, giorno) => festivita.includes(`${meseIdx + 1}-${giorno}`);
+
             const getTurnoEffettivo = (meseIdx, giorno) => {
                 const chiave = getChiaveGiorno(meseIdx, giorno);
                 const modifica = modifiche[chiave];
-                if (modifica) {
-                    return { ...getTurnoBase(meseIdx, giorno), modifica };
-                }
-                return getTurnoBase(meseIdx, giorno);
+                const base = getTurnoBase(meseIdx, giorno);
+                if (modifica) return { ...base, modifica };
+                return base;
             };
 
             const getTurnoClass = (turno) => {
@@ -124,29 +196,58 @@
             };
 
             const apriModale = (meseIdx, giorno) => {
-                setSelectedDay({ mese: meseIdx, giorno });
-                const chiave = getChiaveGiorno(meseIdx, giorno);
-                setModalNote(note[chiave] || '');
-                setShowModal(true);
+                if (isSelecting) {
+                    if (!selectedRange.start) {
+                        setSelectedRange({ start: { mese: meseIdx, giorno }, end: null });
+                    } else if (!selectedRange.end) {
+                        setSelectedRange({ ...selectedRange, end: { mese: meseIdx, giorno } });
+                        setIsSelecting(false);
+                    }
+                } else {
+                    setSelectedDay({ mese: meseIdx, giorno });
+                    const chiave = getChiaveGiorno(meseIdx, giorno);
+                    setModalNote(note[chiave] || '');
+                    setShowModal(true);
+                }
             };
 
             const applicaModifica = (tipoModifica) => {
                 if (!selectedDay) return;
                 const chiave = getChiaveGiorno(selectedDay.mese, selectedDay.giorno);
-                
                 if (tipoModifica === 'reset') {
-                    const nuoveModifiche = { ...modifiche };
-                    delete nuoveModifiche[chiave];
-                    setModifiche(nuoveModifiche);
+                    const nuove = { ...modifiche };
+                    delete nuove[chiave];
+                    setModifiche(nuove);
                     showNotification('🔄 Turno ripristinato!');
                 } else {
-                    setModifiche({
-                        ...modifiche,
-                        [chiave]: { tipo: tipoModifica, data: new Date().toISOString() }
-                    });
+                    setModifiche({ ...modifiche, [chiave]: { tipo: tipoModifica, data: new Date().toISOString() } });
                     const tipo = tipiModifica.find(t => t.id === tipoModifica);
                     showNotification(`${tipo.emoji} ${tipo.nome} applicato!`);
                 }
+            };
+
+            const applicaModificaRange = (tipoModifica) => {
+                if (!selectedRange.start || !selectedRange.end) return;
+                const nuove = { ...modifiche };
+                let count = 0;
+                
+                for (let m = selectedRange.start.mese; m <= selectedRange.end.mese; m++) {
+                    const startG = m === selectedRange.start.mese ? selectedRange.start.giorno : 1;
+                    const endG = m === selectedRange.end.mese ? selectedRange.end.giorno : giorniMese[m];
+                    for (let g = startG; g <= endG; g++) {
+                        const chiave = getChiaveGiorno(m, g);
+                        if (tipoModifica === 'reset') {
+                            delete nuove[chiave];
+                        } else {
+                            nuove[chiave] = { tipo: tipoModifica, data: new Date().toISOString() };
+                        }
+                        count++;
+                    }
+                }
+                setModifiche(nuove);
+                setSelectedRange({ start: null, end: null });
+                const tipo = tipiModifica.find(t => t.id === tipoModifica);
+                showNotification(`${tipo?.emoji || '🔄'} ${tipoModifica === 'reset' ? 'Ripristinati' : tipo?.nome + ' applicato a'} ${count} giorni!`);
             };
 
             const salvaNote = () => {
@@ -156,111 +257,100 @@
                     setNote({ ...note, [chiave]: modalNote });
                     showNotification('📝 Nota salvata!');
                 } else {
-                    const nuoveNote = { ...note };
-                    delete nuoveNote[chiave];
-                    setNote(nuoveNote);
+                    const nuove = { ...note };
+                    delete nuove[chiave];
+                    setNote(nuove);
                 }
             };
 
-            const calcolaStatistiche = () => {
-                let stats = { 
-                    Mat: 0, Pom: 0, Not: 0, R: 0, totale: 0,
-                    ferie: 0, permesso: 0, malattia: 0, straordinario: 0,
-                    oreStimate: 0
-                };
+            const stats = useMemo(() => {
+                let s = { Mat: 0, Pom: 0, Not: 0, R: 0, totale: 0, oreStimate: 0, festivi: 0, perMese: [] };
+                tipiModifica.forEach(t => s[t.id] = 0);
                 
                 for (let m = 0; m < 12; m++) {
+                    let meseStat = { lavoro: 0, riposo: 0 };
                     for (let g = 1; g <= giorniMese[m]; g++) {
                         const turno = getTurnoEffettivo(m, g);
+                        const festivo = isFestivo(m, g);
+                        if (festivo && turno.lavoro) s.festivi++;
                         
                         if (turno.modifica) {
-                            stats[turno.modifica.tipo]++;
-                            if (turno.modifica.tipo === 'straordinario') {
-                                stats.oreStimate += 8;
-                            }
+                            s[turno.modifica.tipo]++;
+                            if (turno.modifica.tipo === 'straordinario') s.oreStimate += 8;
                         } else {
-                            stats[turno.tipo]++;
+                            s[turno.tipo]++;
                             if (turno.lavoro) {
-                                stats.totale++;
-                                stats.oreStimate += 8;
+                                s.totale++;
+                                s.oreStimate += turno.ore;
+                                meseStat.lavoro++;
+                            } else {
+                                meseStat.riposo++;
                             }
                         }
                     }
+                    s.perMese.push(meseStat);
                 }
-                return stats;
+                return s;
+            }, [modifiche]);
+
+            const calcolaStipendio = useMemo(() => {
+                let totale = stipendioBase;
+                totale += stats.Not * configStipenio.bonusNotte;
+                totale += stats.straordinario * configStipenio.bonusStraordinario;
+                totale += stats.festivi * configStipenio.bonusFestivo;
+                totale -= stats.malattia * configStipenio.trattenutaMalattia;
+                totale -= stats.permesso * configStipenio.trattenutaPermesso;
+                return totale;
+            }, [stats, stipendioBase, configStipenio]);
+
+            const generaLinkCondivisione = () => {
+                const data = { modifiche, note };
+                const encoded = btoa(JSON.stringify(data));
+                const url = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
+                navigator.clipboard.writeText(url);
+                showNotification('📋 Link copiato negli appunti!');
+                setShowShareModal(false);
             };
 
             const exportData = (format) => {
-                const stats = calcolaStatistiche();
                 let content = '';
-                
                 if (format === 'json') {
-                    const data = {
-                        anno: 2026,
-                        squadra: '4ª Squadra',
-                        statistiche: stats,
-                        modifiche: modifiche,
-                        note: note,
-                        esportato: new Date().toISOString()
-                    };
-                    content = JSON.stringify(data, null, 2);
-                    downloadFile(content, 'turni-2026.json', 'application/json');
+                    content = JSON.stringify({ anno: 2026, squadra: '4ª Squadra', statistiche: stats, modifiche, note, stipendioCalcolato: calcolaStipendio, esportato: new Date().toISOString() }, null, 2);
+                    downloadFile(content, 'turni-ultra-2026.json', 'application/json');
                 } else if (format === 'csv') {
-                    content = 'Data,Giorno Settimana,Turno Base,Modifica,Note\n';
+                    content = 'Data,Giorno,Turno,Orario,Modifica,Festivo,Note\n';
                     for (let m = 0; m < 12; m++) {
                         for (let g = 1; g <= giorniMese[m]; g++) {
                             const turno = getTurnoEffettivo(m, g);
                             const chiave = getChiaveGiorno(m, g);
                             const dataStr = `${g.toString().padStart(2, '0')}/${(m+1).toString().padStart(2, '0')}/2026`;
-                            const giornoSett = getGiornoSettimana(m, g);
-                            const modStr = turno.modifica ? turno.modifica.tipo : '';
+                            const modStr = turno.modifica ? tipiModifica.find(t => t.id === turno.modifica.tipo)?.nome : '';
                             const notaStr = (note[chiave] || '').replace(/"/g, '""');
-                            content += `${dataStr},${giornoSett},${turno.tipo},${modStr},"${notaStr}"\n`;
+                            const festivo = isFestivo(m, g) ? 'Sì' : 'No';
+                            content += `${dataStr},${getGiornoSettimana(m, g)},${turno.tipo},${turno.orario},${modStr},${festivo},"${notaStr}"\n`;
                         }
                     }
-                    downloadFile(content, 'turni-2026.csv', 'text/csv');
+                    downloadFile(content, 'turni-ultra-2026.csv', 'text/csv');
                 } else if (format === 'ical') {
                     content = generateICalendar();
-                    downloadFile(content, 'turni-2026.ics', 'text/calendar');
+                    downloadFile(content, 'turni-ultra-2026.ics', 'text/calendar');
                 }
-                
-                showNotification(`📁 Esportato in ${format.toUpperCase()}!`);
-                setShowExportModal(false);
+                showNotification(`📁 Esportato ${format.toUpperCase()}!`);
             };
 
             const generateICalendar = () => {
-                let ical = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Turni 4a Squadra//IT
-CALSCALE:GREGORIAN
-METHOD:PUBLISH
-X-WR-CALNAME:Turni 4ª Squadra 2026
-`;
+                let ical = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Turni Ultra//IT\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\nX-WR-CALNAME:Turni 4ª Squadra 2026\n';
                 for (let m = 0; m < 12; m++) {
                     for (let g = 1; g <= giorniMese[m]; g++) {
                         const turno = getTurnoEffettivo(m, g);
-                        if (turno.lavoro || turno.modifica) {
-                            const dateStr = `2026${(m+1).toString().padStart(2, '0')}${g.toString().padStart(2, '0')}`;
-                            const chiave = getChiaveGiorno(m, g);
-                            let summary = turno.modifica 
-                                ? tipiModifica.find(t => t.id === turno.modifica.tipo)?.nome || turno.tipo
-                                : `Turno ${turno.tipo}`;
-                            let description = turno.orario;
-                            if (note[chiave]) description += ` - ${note[chiave]}`;
-                            
-                            ical += `BEGIN:VEVENT
-DTSTART;VALUE=DATE:${dateStr}
-DTEND;VALUE=DATE:${dateStr}
-SUMMARY:${summary}
-DESCRIPTION:${description}
-UID:${dateStr}-turno@4squadra
-END:VEVENT
-`;
-                        }
+                        const dateStr = `2026${(m+1).toString().padStart(2, '0')}${g.toString().padStart(2, '0')}`;
+                        const chiave = getChiaveGiorno(m, g);
+                        let summary = turno.modifica ? tipiModifica.find(t => t.id === turno.modifica.tipo)?.nome : `Turno ${turno.tipo}`;
+                        let desc = turno.orario + (note[chiave] ? ` | ${note[chiave]}` : '');
+                        ical += `BEGIN:VEVENT\nDTSTART;VALUE=DATE:${dateStr}\nSUMMARY:${summary}\nDESCRIPTION:${desc}\nUID:${dateStr}@turni4squadra\nEND:VEVENT\n`;
                     }
                 }
-                ical += 'END:VCALENDAR';
-                return ical;
+                return ical + 'END:VCALENDAR';
             };
 
             const downloadFile = (content, filename, mimeType) => {
@@ -274,8 +364,7 @@ END:VEVENT
             };
 
             const getGiornoSettimana = (meseIdx, giorno) => {
-                const primo = primoGiornoMese[meseIdx];
-                const idx = (primo + giorno - 1) % 7;
+                const idx = (primoGiornoMese[meseIdx] + giorno - 1) % 7;
                 return giorniSettimana[idx];
             };
 
@@ -284,263 +373,396 @@ END:VEVENT
                 const [anno, mese, giorno] = searchDate.split('-').map(Number);
                 if (anno === 2026 && mese >= 1 && mese <= 12) {
                     setSelectedMonth(mese - 1);
+                    setActiveTab('calendario');
                     setTimeout(() => {
                         setHoveredDay(giorno);
-                        showNotification(`📍 Trovato: ${giorno} ${mesi[mese-1]} 2026`);
+                        showNotification(`📍 ${giorno} ${mesi[mese-1]} 2026`);
                     }, 300);
                 }
             };
 
-            const stats = calcolaStatistiche();
+            const aggiungiCollega = () => {
+                if (!nuovoCollega.nome.trim()) return;
+                setColleghi([...colleghi, { ...nuovoCollega, id: Date.now() }]);
+                setNuovoCollega({ nome: '', offset: 0 });
+                showNotification('👥 Collega aggiunto!');
+            };
+
+            const rimuoviCollega = (id) => {
+                setColleghi(colleghi.filter(c => c.id !== id));
+                showNotification('🗑️ Collega rimosso');
+            };
+
+            const prossimoTurno = useMemo(() => {
+                const oggi = new Date();
+                const meseCorrente = oggi.getMonth();
+                const giornoCorrente = oggi.getDate();
+                for (let offset = 0; offset < 30; offset++) {
+                    let g = giornoCorrente + offset;
+                    let m = meseCorrente;
+                    while (g > giorniMese[m]) {
+                        g -= giorniMese[m];
+                        m++;
+                        if (m > 11) return null;
+                    }
+                    const turno = getTurnoEffettivo(m, g);
+                    if (turno.lavoro && !turno.modifica) {
+                        return { mese: m, giorno: g, turno, inGiorni: offset };
+                    }
+                }
+                return null;
+            }, [modifiche]);
+
+            useEffect(() => {
+                if (activeTab === 'grafici' && chartRef.current) {
+                    if (chartInstance.current) chartInstance.current.destroy();
+                    const ctx = chartRef.current.getContext('2d');
+                    chartInstance.current = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: mesi.map(m => m.substring(0, 3)),
+                            datasets: [{
+                                label: 'Giorni Lavoro',
+                                data: stats.perMese.map(m => m.lavoro),
+                                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                                borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { labels: { color: '#9ca3af' } } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: '#374151' }, ticks: { color: '#9ca3af' } },
+                                x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                            }
+                        }
+                    });
+                }
+            }, [activeTab, stats]);
 
             const renderCalendario = () => {
                 const giorni = [];
                 const primoGiorno = primoGiornoMese[selectedMonth];
                 const numGiorni = giorniMese[selectedMonth];
-
-                for (let i = 0; i < primoGiorno; i++) {
-                    giorni.push(<div key={`empty-${i}`} className="h-20 md:h-24"></div>);
-                }
-
+                for (let i = 0; i < primoGiorno; i++) giorni.push(<div key={`e-${i}`} className="h-16 md:h-20"></div>);
                 for (let giorno = 1; giorno <= numGiorni; giorno++) {
                     const turno = getTurnoEffettivo(selectedMonth, giorno);
                     const chiave = getChiaveGiorno(selectedMonth, giorno);
                     const hasNote = note[chiave];
                     const hasModifica = turno.modifica;
                     const isHovered = hoveredDay === giorno;
+                    const festivo = isFestivo(selectedMonth, giorno);
+                    const inRange = selectedRange.start && selectedRange.end && 
+                        ((selectedMonth > selectedRange.start.mese || (selectedMonth === selectedRange.start.mese && giorno >= selectedRange.start.giorno)) &&
+                         (selectedMonth < selectedRange.end.mese || (selectedMonth === selectedRange.end.mese && giorno <= selectedRange.end.giorno)));
                     
                     giorni.push(
-                        <div
-                            key={giorno}
-                            onClick={() => apriModale(selectedMonth, giorno)}
-                            className={`h-20 md:h-24 rounded-lg ${getTurnoClass(turno)} 
-                                       flex flex-col items-center justify-center cursor-pointer relative
-                                       transform transition-all duration-200 hover:scale-105 hover:shadow-xl
-                                       ${isHovered ? 'ring-4 ring-white ring-opacity-70 scale-110' : ''}
-                                       ${hasModifica ? 'ring-2 ring-yellow-300' : ''}`}
-                        >
-                            {hasNote && (
-                                <div className="absolute top-1 right-1 text-xs">📝</div>
-                            )}
-                            {hasModifica && (
-                                <div className="absolute top-1 left-1 text-xs">
-                                    {tipiModifica.find(t => t.id === hasModifica.tipo)?.emoji}
-                                </div>
-                            )}
-                            <span className="text-lg font-bold">{giorno}</span>
-                            <span className="text-sm font-semibold">
-                                {hasModifica 
-                                    ? tipiModifica.find(t => t.id === hasModifica.tipo)?.nome.substring(0, 3)
-                                    : turno.tipo}
-                            </span>
-                            {isHovered && (
-                                <span className="text-xs mt-1 opacity-90 text-center px-1">
-                                    {hasModifica 
-                                        ? tipiModifica.find(t => t.id === hasModifica.tipo)?.nome
-                                        : turno.orario}
-                                </span>
-                            )}
+                        <div key={giorno} onClick={() => apriModale(selectedMonth, giorno)}
+                            className={`h-16 md:h-20 rounded-xl ${getTurnoClass(turno)} flex flex-col items-center justify-center cursor-pointer relative
+                                transform transition-all duration-300 hover:scale-110 hover:shadow-2xl hover:z-10
+                                ${isHovered ? 'ring-4 ring-white scale-110 z-20' : ''} ${hasModifica ? 'ring-2 ring-yellow-400' : ''}
+                                ${festivo ? 'ring-2 ring-red-400' : ''} ${inRange ? 'ring-4 ring-green-400' : ''}`}>
+                            {hasNote && <div className="absolute top-1 right-1 text-xs animate-bounce">📝</div>}
+                            {hasModifica && <div className="absolute top-1 left-1 text-xs">{tipiModifica.find(t => t.id === hasModifica.tipo)?.emoji}</div>}
+                            {festivo && <div className="absolute bottom-1 right-1 text-xs">🎉</div>}
+                            <span className="text-base md:text-lg font-bold">{giorno}</span>
+                            <span className="text-xs font-semibold">{hasModifica ? tipiModifica.find(t => t.id === hasModifica.tipo)?.nome.substring(0, 3) : turno.tipo}</span>
                         </div>
                     );
                 }
-
                 return giorni;
             };
 
             return (
-                <div className={`min-h-screen ${darkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-indigo-100'} p-4 md:p-8 transition-colors duration-500`}>
+                <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-indigo-900 p-3 md:p-6">
                     {notification && (
-                        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg 
-                                        ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white font-semibold`}>
+                        <div className={`fixed top-4 right-4 z-[100] px-6 py-3 rounded-xl shadow-2xl transform transition-all animate-bounce
+                            ${notification.type === 'success' ? 'bg-gradient-to-r from-green-500 to-emerald-600' : 'bg-gradient-to-r from-red-500 to-rose-600'} text-white font-bold`}>
                             {notification.message}
                         </div>
                     )}
 
                     <div className="max-w-7xl mx-auto">
-                        <div className="text-center mb-6">
-                            <h1 className={`text-4xl md:text-5xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} mb-2`}>
+                        <header className="text-center mb-6">
+                            <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-2 float">
                                 🗓️ Turni 4ª Squadra 2026
-                                <span className="text-sm ml-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white px-2 py-1 rounded-full">PRO</span>
                             </h1>
-                            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                Clicca su un giorno per modificarlo • Gestisci ferie, permessi e note
-                            </p>
-                        </div>
-
-                        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-4 mb-6 shadow-xl flex flex-wrap gap-3 items-center justify-between`}>
-                            <div className="flex gap-2">
-                                <button onClick={() => setShowExportModal(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                                    📥 Esporta
-                                </button>
-                                <button onClick={() => setShowStatsModal(true)} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
-                                    📊 Statistiche
-                                </button>
-                                <button onClick={() => setShowHelp(true)} className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
-                                    ❓
-                                </button>
+                            <div className="inline-block bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-1 rounded-full text-sm font-bold shimmer">
+                                ⭐ ULTRA PRO EDITION ⭐
                             </div>
+                            {prossimoTurno && (
+                                <div className="mt-3 glass rounded-xl p-3 inline-block">
+                                    <p className="text-gray-300 text-sm">Prossimo turno: <span className="font-bold text-white">{prossimoTurno.turno.tipo}</span> 
+                                    {prossimoTurno.inGiorni === 0 ? ' (OGGI!)' : prossimoTurno.inGiorni === 1 ? ' (domani)' : ` tra ${prossimoTurno.inGiorni} giorni`}
+                                    </p>
+                                </div>
+                            )}
+                        </header>
+
+                        <nav className="glass rounded-2xl p-2 mb-4 flex flex-wrap gap-2 justify-center">
+                            {[
+                                { id: 'calendario', icon: '📅', label: 'Calendario' },
+                                { id: 'grafici', icon: '📊', label: 'Grafici' },
+                                { id: 'stipendio', icon: '💰', label: 'Stipendio' },
+                                { id: 'colleghi', icon: '👥', label: 'Colleghi' },
+                                { id: 'export', icon: '📥', label: 'Export' }
+                            ].map(tab => (
+                                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                                    className={`px-4 py-2 rounded-xl font-semibold transition-all ${activeTab === tab.id ? 'bg-blue-600 text-white shadow-lg scale-105' : 'text-gray-300 hover:bg-gray-700'}`}>
+                                    {tab.icon} {tab.label}
+                                </button>
+                            ))}
+                        </nav>
+
+                        <div className="glass rounded-2xl p-3 mb-4 flex flex-wrap gap-2 items-center justify-between">
                             <div className="flex gap-2 items-center">
-                                <input type="date" value={searchDate} onChange={(e) => setSearchDate(e.target.value)} min="2026-01-01" max="2026-12-31" className="bg-gray-700 text-white px-3 py-2 rounded-lg" />
-                                <button onClick={cercaData} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">🔍</button>
-                                <button onClick={() => setDarkMode(!darkMode)} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
-                                    {darkMode ? '☀️' : '🌙'}
+                                <input type="date" value={searchDate} onChange={(e) => setSearchDate(e.target.value)} min="2026-01-01" max="2026-12-31" className="bg-gray-700/50 text-white px-3 py-2 rounded-lg text-sm" />
+                                <button onClick={cercaData} className="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded-lg">🔍</button>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={() => setIsSelecting(!isSelecting)} className={`px-3 py-2 rounded-lg font-semibold transition-all ${isSelecting ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-white hover:bg-gray-600'}`}>
+                                    {isSelecting ? '🎯 Seleziona Range' : '📌 Multi-Selezione'}
                                 </button>
+                                <button onClick={() => setShowShareModal(true)} className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 rounded-lg">🔗 Condividi</button>
                             </div>
                         </div>
 
-                        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-4 mb-6 shadow-xl`}>
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                                <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-3 text-center">
-                                    <p className="text-white text-xs opacity-80">Giorni Lavoro</p>
-                                    <p className="text-2xl font-bold text-white">{stats.totale}</p>
-                                </div>
-                                <div className="turno-ferie rounded-lg p-3 text-center">
-                                    <p className="text-white text-xs opacity-80">Ferie</p>
-                                    <p className="text-2xl font-bold text-white">{stats.ferie}</p>
-                                </div>
-                                <div className="turno-permesso rounded-lg p-3 text-center">
-                                    <p className="text-white text-xs opacity-80">Permessi</p>
-                                    <p className="text-2xl font-bold text-white">{stats.permesso}</p>
-                                </div>
-                                <div className="turno-malattia rounded-lg p-3 text-center">
-                                    <p className="text-white text-xs opacity-80">Malattia</p>
-                                    <p className="text-2xl font-bold text-white">{stats.malattia}</p>
-                                </div>
-                                <div className="turno-straordinario rounded-lg p-3 text-center">
-                                    <p className="text-white text-xs opacity-80">Straordinari</p>
-                                    <p className="text-2xl font-bold text-white">{stats.straordinario}</p>
+                        {selectedRange.start && selectedRange.end && (
+                            <div className="glass rounded-xl p-4 mb-4">
+                                <p className="text-white mb-3">📌 Range selezionato: {selectedRange.start.giorno}/{selectedRange.start.mese + 1} → {selectedRange.end.giorno}/{selectedRange.end.mese + 1}</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {tipiModifica.map(t => (
+                                        <button key={t.id} onClick={() => applicaModificaRange(t.id)} className={`${t.classe} text-white px-3 py-2 rounded-lg text-sm font-semibold hover:scale-105 transition-transform`}>
+                                            {t.emoji} {t.nome}
+                                        </button>
+                                    ))}
+                                    <button onClick={() => applicaModificaRange('reset')} className="bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-semibold">🔄 Reset</button>
+                                    <button onClick={() => setSelectedRange({ start: null, end: null })} className="bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-semibold">❌ Annulla</button>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
-                        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-4 mb-6 shadow-xl`}>
-                            <div className="flex items-center justify-between mb-4">
-                                <button onClick={() => setSelectedMonth(Math.max(0, selectedMonth - 1))} className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'} px-4 py-2 rounded-lg transition-colors`} disabled={selectedMonth === 0}>
-                                    ◀ Prec
-                                </button>
-                                <h2 className={`text-2xl md:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                                    {mesi[selectedMonth]} 2026
-                                </h2>
-                                <button onClick={() => setSelectedMonth(Math.min(11, selectedMonth + 1))} className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'} px-4 py-2 rounded-lg transition-colors`} disabled={selectedMonth === 11}>
-                                    Succ ▶
-                                </button>
-                            </div>
-                            <div className="flex flex-wrap justify-center gap-2">
-                                {mesi.map((mese, idx) => (
-                                    <button key={mese} onClick={() => setSelectedMonth(idx)} className={`px-3 py-1 rounded text-sm transition-all transform hover:scale-110 ${selectedMonth === idx ? 'bg-blue-600 text-white shadow-lg' : `${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}`}>
-                                        {mese.substring(0, 3)}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-4 md:p-6 shadow-xl`}>
-                            <div className="grid grid-cols-7 gap-2 mb-4">
-                                {giorniSettimana.map(giorno => (
-                                    <div key={giorno} className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'} font-semibold py-2`}>
-                                        {giorno}
+                        {activeTab === 'calendario' && (
+                            <>
+                                <div className="glass rounded-2xl p-4 mb-4">
+                                    <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
+                                        <div className="bg-blue-600/30 rounded-lg p-2 text-center"><p className="text-xs text-gray-400">Lavoro</p><p className="text-xl font-bold text-white">{stats.totale}</p></div>
+                                        <div className="turno-ferie/50 rounded-lg p-2 text-center"><p className="text-xs text-gray-400">Ferie</p><p className="text-xl font-bold text-white">{stats.ferie}</p></div>
+                                        <div className="turno-permesso/50 rounded-lg p-2 text-center"><p className="text-xs text-gray-400">Permessi</p><p className="text-xl font-bold text-white">{stats.permesso}</p></div>
+                                        <div className="turno-malattia/50 rounded-lg p-2 text-center"><p className="text-xs text-gray-400">Malattia</p><p className="text-xl font-bold text-white">{stats.malattia}</p></div>
+                                        <div className="turno-straordinario/50 rounded-lg p-2 text-center"><p className="text-xs text-gray-400">Straord.</p><p className="text-xl font-bold text-white">{stats.straordinario}</p></div>
+                                        <div className="bg-green-600/30 rounded-lg p-2 text-center"><p className="text-xs text-gray-400">Ore Tot.</p><p className="text-xl font-bold text-white">{stats.oreStimate}h</p></div>
                                     </div>
-                                ))}
-                            </div>
-                            <div className="grid grid-cols-7 gap-2">
-                                {renderCalendario()}
-                            </div>
-                        </div>
+                                </div>
 
-                        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-4 mt-6 shadow-xl`}>
-                            <h3 className={`${darkMode ? 'text-white' : 'text-gray-800'} font-semibold mb-3`}>📋 Legenda:</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-                                <div className="flex items-center gap-2"><div className="w-6 h-6 turno-mat rounded"></div><span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Mattina</span></div>
-                                <div className="flex items-center gap-2"><div className="w-6 h-6 turno-pom rounded"></div><span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Pomeriggio</span></div>
-                                <div className="flex items-center gap-2"><div className="w-6 h-6 turno-not rounded"></div><span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Notte</span></div>
-                                <div className="flex items-center gap-2"><div className="w-6 h-6 turno-riposo rounded"></div><span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Riposo</span></div>
-                                <div className="flex items-center gap-2"><div className="w-6 h-6 turno-ferie rounded"></div><span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Ferie</span></div>
-                                <div className="flex items-center gap-2"><div className="w-6 h-6 turno-permesso rounded"></div><span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Permesso</span></div>
-                                <div className="flex items-center gap-2"><div className="w-6 h-6 turno-malattia rounded"></div><span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Malattia</span></div>
-                                <div className="flex items-center gap-2"><div className="w-6 h-6 turno-straordinario rounded"></div><span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Straordinario</span></div>
+                                <div className="glass rounded-2xl p-4 mb-4">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <button onClick={() => setSelectedMonth(Math.max(0, selectedMonth - 1))} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg" disabled={selectedMonth === 0}>◀</button>
+                                        <h2 className="text-2xl font-bold text-white">{mesi[selectedMonth]} 2026</h2>
+                                        <button onClick={() => setSelectedMonth(Math.min(11, selectedMonth + 1))} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg" disabled={selectedMonth === 11}>▶</button>
+                                    </div>
+                                    <div className="flex flex-wrap justify-center gap-1 mb-4">
+                                        {mesi.map((m, i) => (
+                                            <button key={m} onClick={() => setSelectedMonth(i)} className={`px-2 py-1 rounded text-xs transition-all ${selectedMonth === i ? 'bg-blue-600 text-white' : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600'}`}>
+                                                {m.substring(0, 3)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="grid grid-cols-7 gap-1 mb-2">
+                                        {giorniSettimana.map(g => <div key={g} className="text-center text-gray-500 font-semibold text-xs py-1">{g}</div>)}
+                                    </div>
+                                    <div className="grid grid-cols-7 gap-1">{renderCalendario()}</div>
+                                </div>
+
+                                <div className="glass rounded-xl p-3">
+                                    <div className="grid grid-cols-4 md:grid-cols-8 gap-2 text-xs">
+                                        <div className="flex items-center gap-1"><div className="w-4 h-4 turno-mat rounded"></div><span className="text-gray-400">Mat</span></div>
+                                        <div className="flex items-center gap-1"><div className="w-4 h-4 turno-pom rounded"></div><span className="text-gray-400">Pom</span></div>
+                                        <div className="flex items-center gap-1"><div className="w-4 h-4 turno-not rounded"></div><span className="text-gray-400">Not</span></div>
+                                        <div className="flex items-center gap-1"><div className="w-4 h-4 turno-riposo rounded"></div><span className="text-gray-400">R</span></div>
+                                        <div className="flex items-center gap-1"><div className="w-4 h-4 turno-ferie rounded"></div><span className="text-gray-400">Ferie</span></div>
+                                        <div className="flex items-center gap-1"><div className="w-4 h-4 turno-malattia rounded"></div><span className="text-gray-400">Mal</span></div>
+                                        <div className="flex items-center gap-1"><div className="w-4 h-4 turno-104 rounded"></div><span className="text-gray-400">104</span></div>
+                                        <div className="flex items-center gap-1"><div className="w-4 h-4 turno-donazione rounded"></div><span className="text-gray-400">Don</span></div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {activeTab === 'grafici' && (
+                            <div className="glass rounded-2xl p-6">
+                                <h3 className="text-xl font-bold text-white mb-4">📊 Analisi Annuale</h3>
+                                <div className="h-64 md:h-96"><canvas ref={chartRef}></canvas></div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                                    <div className="bg-gray-800/50 rounded-xl p-4 text-center">
+                                        <p className="text-gray-400 text-sm">Media Lavoro/Mese</p>
+                                        <p className="text-2xl font-bold text-blue-400">{(stats.totale / 12).toFixed(1)}</p>
+                                    </div>
+                                    <div className="bg-gray-800/50 rounded-xl p-4 text-center">
+                                        <p className="text-gray-400 text-sm">Notti Totali</p>
+                                        <p className="text-2xl font-bold text-purple-400">{stats.Not}</p>
+                                    </div>
+                                    <div className="bg-gray-800/50 rounded-xl p-4 text-center">
+                                        <p className="text-gray-400 text-sm">Festivi Lavorati</p>
+                                        <p className="text-2xl font-bold text-red-400">{stats.festivi}</p>
+                                    </div>
+                                    <div className="bg-gray-800/50 rounded-xl p-4 text-center">
+                                        <p className="text-gray-400 text-sm">% Assenze</p>
+                                        <p className="text-2xl font-bold text-yellow-400">{((stats.ferie + stats.malattia + stats.permesso) / 365 * 100).toFixed(1)}%</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        )}
+
+                        {activeTab === 'stipendio' && (
+                            <div className="glass rounded-2xl p-6">
+                                <h3 className="text-xl font-bold text-white mb-4">💰 Calcolo Stipendio Annuale</h3>
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-gray-300 mb-2">Stipendio Base Mensile (€)</label>
+                                        <input type="number" value={stipendioBase} onChange={(e) => setStipendioBase(parseFloat(e.target.value) || 0)} className="w-full bg-gray-700/50 text-white px-4 py-3 rounded-lg text-lg" />
+                                        <button onClick={() => setShowConfigModal(true)} className="mt-3 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg w-full">⚙️ Configura Bonus/Trattenute</button>
+                                    </div>
+                                    <div className="bg-gradient-to-br from-green-600 to-emerald-700 rounded-xl p-6 text-center">
+                                        <p className="text-green-200 mb-2">Stipendio Annuo Stimato</p>
+                                        <p className="text-4xl font-black text-white">€ {(calcolaStipendio * 12).toLocaleString('it-IT', { minimumFractionDigits: 2 })}</p>
+                                        <p className="text-green-200 mt-2 text-sm">€ {calcolaStipendio.toFixed(2)}/mese</p>
+                                    </div>
+                                </div>
+                                <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3">
+                                    <div className="bg-gray-800/50 rounded-lg p-3"><p className="text-xs text-gray-400">Bonus Notti ({stats.Not}x)</p><p className="text-lg font-bold text-green-400">+€{(stats.Not * configStipenio.bonusNotte).toFixed(2)}</p></div>
+                                    <div className="bg-gray-800/50 rounded-lg p-3"><p className="text-xs text-gray-400">Bonus Straord. ({stats.straordinario}x)</p><p className="text-lg font-bold text-green-400">+€{(stats.straordinario * configStipenio.bonusStraordinario).toFixed(2)}</p></div>
+                                    <div className="bg-gray-800/50 rounded-lg p-3"><p className="text-xs text-gray-400">Bonus Festivi ({stats.festivi}x)</p><p className="text-lg font-bold text-green-400">+€{(stats.festivi * configStipenio.bonusFestivo).toFixed(2)}</p></div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'colleghi' && (
+                            <div className="glass rounded-2xl p-6">
+                                <h3 className="text-xl font-bold text-white mb-4">👥 Gestione Colleghi</h3>
+                                <div className="flex gap-2 mb-4">
+                                    <input type="text" placeholder="Nome collega" value={nuovoCollega.nome} onChange={(e) => setNuovoCollega({...nuovoCollega, nome: e.target.value})} className="flex-1 bg-gray-700/50 text-white px-4 py-2 rounded-lg" />
+                                    <input type="number" placeholder="Offset ciclo" value={nuovoCollega.offset} onChange={(e) => setNuovoCollega({...nuovoCollega, offset: parseInt(e.target.value) || 0})} className="w-24 bg-gray-700/50 text-white px-4 py-2 rounded-lg" min="-11" max="11" />
+                                    <button onClick={aggiungiCollega} className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg">➕</button>
+                                </div>
+                                <p className="text-gray-400 text-sm mb-4">Offset: quanti giorni di differenza nel ciclo rispetto a te (es: -3 = inizia 3 giorni prima)</p>
+                                <div className="space-y-2">
+                                    {colleghi.map(c => (
+                                        <div key={c.id} className="bg-gray-800/50 rounded-lg p-3 flex justify-between items-center">
+                                            <div>
+                                                <p className="text-white font-semibold">{c.nome}</p>
+                                                <p className="text-gray-400 text-sm">Offset: {c.offset > 0 ? '+' : ''}{c.offset} giorni</p>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => { setSelectedCollega(c); setShowCompareModal(true); }} className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm">📊 Confronta</button>
+                                                <button onClick={() => rimuoviCollega(c.id)} className="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded text-sm">🗑️</button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {colleghi.length === 0 && <p className="text-gray-500 text-center py-4">Nessun collega aggiunto</p>}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'export' && (
+                            <div className="glass rounded-2xl p-6">
+                                <h3 className="text-xl font-bold text-white mb-4">📥 Esporta & Condividi</h3>
+                                <div className="grid md:grid-cols-3 gap-4">
+                                    <button onClick={() => exportData('csv')} className="bg-gradient-to-r from-green-600 to-emerald-700 text-white p-6 rounded-xl hover:scale-105 transition-transform">
+                                        <p className="text-3xl mb-2">📊</p>
+                                        <p className="font-bold">Excel/CSV</p>
+                                        <p className="text-sm opacity-80">Apri con Excel</p>
+                                    </button>
+                                    <button onClick={() => exportData('json')} className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-xl hover:scale-105 transition-transform">
+                                        <p className="text-3xl mb-2">💾</p>
+                                        <p className="font-bold">JSON Backup</p>
+                                        <p className="text-sm opacity-80">Backup completo</p>
+                                    </button>
+                                    <button onClick={() => exportData('ical')} className="bg-gradient-to-r from-purple-600 to-pink-700 text-white p-6 rounded-xl hover:scale-105 transition-transform">
+                                        <p className="text-3xl mb-2">📅</p>
+                                        <p className="font-bold">iCalendar</p>
+                                        <p className="text-sm opacity-80">Importa in Calendar</p>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {showModal && selectedDay && (
                         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-                            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-6 max-w-md w-full shadow-2xl`}>
-                                <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} mb-4`}>
-                                    ✏️ Modifica {selectedDay.giorno} {mesi[selectedDay.mese]}
-                                </h3>
-                                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-4`}>Turno base: {getTurnoBase(selectedDay.mese, selectedDay.giorno).tipo} ({getTurnoBase(selectedDay.mese, selectedDay.giorno).orario})</p>
-                                <div className="grid grid-cols-2 gap-3 mb-4">
-                                    {tipiModifica.map(tipo => (
-                                        <button key={tipo.id} onClick={() => applicaModifica(tipo.id)} className={`${tipo.classe} text-white px-4 py-3 rounded-lg transition-transform hover:scale-105 flex items-center justify-center gap-2`}>
-                                            <span>{tipo.emoji}</span><span>{tipo.nome}</span>
+                            <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+                                <h3 className="text-xl font-bold text-white mb-2">✏️ {selectedDay.giorno} {mesi[selectedDay.mese]} 2026</h3>
+                                <p className="text-gray-400 text-sm mb-4">Turno base: {getTurnoBase(selectedDay.mese, selectedDay.giorno).tipo} • {getTurnoBase(selectedDay.mese, selectedDay.giorno).orario}</p>
+                                <div className="grid grid-cols-2 gap-2 mb-4">
+                                    {tipiModifica.map(t => (
+                                        <button key={t.id} onClick={() => applicaModifica(t.id)} className={`${t.classe} text-white p-3 rounded-lg hover:scale-105 transition-transform text-left`}>
+                                            <p className="font-bold">{t.emoji} {t.nome}</p>
+                                            <p className="text-xs opacity-80">{t.desc}</p>
                                         </button>
                                     ))}
-                                    <button onClick={() => applicaModifica('reset')} className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-lg transition-transform hover:scale-105 col-span-2">
-                                        🔄 Ripristina Turno Base
-                                    </button>
                                 </div>
+                                <button onClick={() => applicaModifica('reset')} className="w-full bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-lg mb-4">🔄 Ripristina Turno Base</button>
                                 <div className="mb-4">
-                                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>📝 Note personali:</label>
-                                    <textarea value={modalNote} onChange={(e) => setModalNote(e.target.value)} className={`w-full px-3 py-2 ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'} rounded-lg focus:ring-2 focus:ring-blue-500`} rows="3" placeholder="Aggiungi note, promemoria..." />
-                                    <button onClick={salvaNote} className="mt-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg w-full">💾 Salva Nota</button>
+                                    <label className="block text-gray-300 text-sm mb-2">📝 Note:</label>
+                                    <textarea value={modalNote} onChange={(e) => setModalNote(e.target.value)} className="w-full bg-gray-800 text-white p-3 rounded-lg" rows="3" placeholder="Aggiungi note..." />
+                                    <button onClick={salvaNote} className="mt-2 bg-green-600 hover:bg-green-500 text-white p-2 rounded-lg w-full">💾 Salva Nota</button>
                                 </div>
-                                <button onClick={() => setShowModal(false)} className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">✖️ Chiudi</button>
+                                <button onClick={() => setShowModal(false)} className="w-full bg-red-600 hover:bg-red-500 text-white p-2 rounded-lg">✖️ Chiudi</button>
                             </div>
                         </div>
                     )}
 
-                    {showExportModal && (
+                    {showShareModal && (
                         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-                            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-6 max-w-md w-full shadow-2xl`}>
-                                <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} mb-4`}>📥 Esporta Dati</h3>
+                            <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-md w-full">
+                                <h3 className="text-xl font-bold text-white mb-4">🔗 Condividi Calendario</h3>
+                                <p className="text-gray-400 mb-4">Genera un link con tutti i tuoi dati. Chi lo apre vedrà esattamente il tuo calendario!</p>
+                                <button onClick={generaLinkCondivisione} className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 rounded-xl font-bold hover:scale-105 transition-transform mb-3">
+                                    📋 Copia Link di Condivisione
+                                </button>
+                                <button onClick={() => setShowShareModal(false)} className="w-full bg-gray-700 text-white p-2 rounded-lg">Chiudi</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {showConfigModal && (
+                        <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+                            <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-md w-full">
+                                <h3 className="text-xl font-bold text-white mb-4">⚙️ Configura Stipendio</h3>
                                 <div className="space-y-3">
-                                    <button onClick={() => exportData('csv')} className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg">📊 Esporta CSV (Excel)</button>
-                                    <button onClick={() => exportData('json')} className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg">💾 Esporta JSON (Backup)</button>
-                                    <button onClick={() => exportData('ical')} className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg">📅 Esporta iCalendar</button>
+                                    <div><label className="text-gray-400 text-sm">Bonus Notte (€/turno)</label><input type="number" value={configStipenio.bonusNotte} onChange={(e) => setConfigStipendio({...configStipenio, bonusNotte: parseFloat(e.target.value) || 0})} className="w-full bg-gray-800 text-white p-2 rounded-lg" /></div>
+                                    <div><label className="text-gray-400 text-sm">Bonus Straordinario (€/turno)</label><input type="number" value={configStipenio.bonusStraordinario} onChange={(e) => setConfigStipendio({...configStipenio, bonusStraordinario: parseFloat(e.target.value) || 0})} className="w-full bg-gray-800 text-white p-2 rounded-lg" /></div>
+                                    <div><label className="text-gray-400 text-sm">Bonus Festivo (€/turno)</label><input type="number" value={configStipenio.bonusFestivo} onChange={(e) => setConfigStipendio({...configStipenio, bonusFestivo: parseFloat(e.target.value) || 0})} className="w-full bg-gray-800 text-white p-2 rounded-lg" /></div>
                                 </div>
-                                <button onClick={() => setShowExportModal(false)} className="w-full mt-4 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">✖️ Chiudi</button>
+                                <button onClick={() => setShowConfigModal(false)} className="w-full mt-4 bg-blue-600 text-white p-2 rounded-lg">✅ Salva</button>
                             </div>
                         </div>
                     )}
 
-                    {showStatsModal && (
+                    {showCompareModal && selectedCollega && (
                         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-                            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto`}>
-                                <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} mb-4`}>📊 Statistiche Annuali 2026</h3>
-                                <div className="space-y-3">
-                                    <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} p-3 rounded-lg flex justify-between`}><span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>☀️ Turni Mattina</span><span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{stats.Mat}</span></div>
-                                    <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} p-3 rounded-lg flex justify-between`}><span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>🌅 Turni Pomeriggio</span><span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{stats.Pom}</span></div>
-                                    <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} p-3 rounded-lg flex justify-between`}><span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>🌙 Turni Notte</span><span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{stats.Not}</span></div>
-                                    <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} p-3 rounded-lg flex justify-between`}><span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>😴 Giorni Riposo</span><span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{stats.R}</span></div>
-                                    <hr className={darkMode ? 'border-gray-600' : 'border-gray-300'} />
-                                    <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} p-3 rounded-lg flex justify-between`}><span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>🏖️ Ferie</span><span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{stats.ferie}</span></div>
-                                    <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} p-3 rounded-lg flex justify-between`}><span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>📋 Permessi</span><span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{stats.permesso}</span></div>
-                                    <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} p-3 rounded-lg flex justify-between`}><span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>🤒 Malattia</span><span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{stats.malattia}</span></div>
-                                    <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} p-3 rounded-lg flex justify-between`}><span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>⚡ Straordinari</span><span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{stats.straordinario}</span></div>
-                                    <hr className={darkMode ? 'border-gray-600' : 'border-gray-300'} />
-                                    <div className="bg-blue-600 p-3 rounded-lg flex justify-between text-white"><span>💼 Totale Giorni Lavoro</span><span className="font-bold">{stats.totale}</span></div>
-                                    <div className="bg-green-600 p-3 rounded-lg flex justify-between text-white"><span>⏰ Ore Stimate</span><span className="font-bold">{stats.oreStimate}h</span></div>
+                            <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                                <h3 className="text-xl font-bold text-white mb-4">📊 Confronto con {selectedCollega.nome}</h3>
+                                <p className="text-gray-400 mb-4">Turni di {mesi[selectedMonth]} 2026</p>
+                                <div className="grid grid-cols-7 gap-1 mb-2">
+                                    {giorniSettimana.map(g => <div key={g} className="text-center text-gray-500 text-xs">{g}</div>)}
                                 </div>
-                                <button onClick={() => setShowStatsModal(false)} className="w-full mt-4 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">✖️ Chiudi</button>
-                            </div>
-                        </div>
-                    )}
-
-                    {showHelp && (
-                        <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-                            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-6 max-w-lg w-full shadow-2xl`}>
-                                <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} mb-4`}>❓ Come Usare l'App</h3>
-                                <div className={`space-y-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    <p>🖱️ <strong>Clicca su un giorno</strong> per modificarlo</p>
-                                    <p>🏖️ <strong>Aggiungi ferie, permessi, malattia</strong> o straordinari</p>
-                                    <p>📝 <strong>Scrivi note personali</strong> per ogni giorno</p>
-                                    <p>📥 <strong>Esporta i dati</strong> in CSV, JSON o iCalendar</p>
-                                    <p>🔍 <strong>Cerca una data</strong> specifica</p>
-                                    <p>🌙 <strong>Cambia tema</strong> chiaro/scuro</p>
-                                    <p>💾 <strong>I dati si salvano</strong> automaticamente nel browser</p>
-                                    <p className="text-yellow-500 font-semibold mt-4">⚠️ I dati sono salvati solo su questo dispositivo/browser!</p>
+                                <div className="grid grid-cols-7 gap-1">
+                                    {Array(primoGiornoMese[selectedMonth]).fill(null).map((_, i) => <div key={`e-${i}`} className="h-12"></div>)}
+                                    {Array.from({ length: giorniMese[selectedMonth] }, (_, i) => i + 1).map(g => {
+                                        const mioTurno = getTurnoBase(selectedMonth, g);
+                                        const suoTurno = getTurnoBase(selectedMonth, g, selectedCollega.offset);
+                                        return (
+                                            <div key={g} className="bg-gray-800 rounded p-1 text-center">
+                                                <p className="text-white text-xs font-bold">{g}</p>
+                                                <p className="text-blue-400 text-xs">Tu: {mioTurno.tipo}</p>
+                                                <p className="text-green-400 text-xs">{selectedCollega.nome.substring(0,3)}: {suoTurno.tipo}</p>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                                <button onClick={() => setShowHelp(false)} className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">👍 Ho Capito!</button>
+                                <button onClick={() => setShowCompareModal(false)} className="w-full mt-4 bg-gray-700 text-white p-2 rounded-lg">Chiudi</button>
                             </div>
                         </div>
                     )}
