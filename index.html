@@ -128,6 +128,10 @@
             ];
 
             const ciclo = [
+                { tipo: "Not", orario: "22:00-06:00", lavoro: true, ore: 8 },
+                { tipo: "Not", orario: "22:00-06:00", lavoro: true, ore: 8 },
+                { tipo: "Not", orario: "22:00-06:00", lavoro: true, ore: 8 },
+                { tipo: "R", orario: "Riposo", lavoro: false, ore: 0 },
                 { tipo: "Pom", orario: "14:00-22:00", lavoro: true, ore: 8 },
                 { tipo: "Pom", orario: "14:00-22:00", lavoro: true, ore: 8 },
                 { tipo: "Pom", orario: "14:00-22:00", lavoro: true, ore: 8 },
@@ -135,10 +139,6 @@
                 { tipo: "Mat", orario: "06:00-14:00", lavoro: true, ore: 8 },
                 { tipo: "Mat", orario: "06:00-14:00", lavoro: true, ore: 8 },
                 { tipo: "Mat", orario: "06:00-14:00", lavoro: true, ore: 8 },
-                { tipo: "R", orario: "Riposo", lavoro: false, ore: 0 },
-                { tipo: "Not", orario: "22:00-06:00", lavoro: true, ore: 8 },
-                { tipo: "Not", orario: "22:00-06:00", lavoro: true, ore: 8 },
-                { tipo: "Not", orario: "22:00-06:00", lavoro: true, ore: 8 },
                 { tipo: "R", orario: "Riposo", lavoro: false, ore: 0 },
             ];
 
@@ -247,7 +247,7 @@
             const getTurnoBase = (meseIdx, giorno, offset = 0) => {
                 let giornoAnno = giorno;
                 for (let i = 0; i < meseIdx; i++) giornoAnno += giorniMese[i];
-                const indiceCiclo = (giornoAnno - 1 + 3 + offset) % 12;
+                const indiceCiclo = (giornoAnno - 1 + 1 + offset) % 12;
                 return ciclo[indiceCiclo];
             };
 
