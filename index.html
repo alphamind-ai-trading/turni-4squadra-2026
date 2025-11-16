@@ -19,7 +19,7 @@
         
         .header {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            padding: 20px;
+            padding: 16px 20px;
             text-align: center;
             border-bottom: 1px solid #334155;
             position: sticky;
@@ -28,98 +28,99 @@
         }
         
         .header h1 {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
-            margin-bottom: 8px;
             background: linear-gradient(90deg, #60a5fa, #a78bfa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         
-        .oggi-info {
+        .tabs {
+            display: flex;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            overflow-x: auto;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .tab.active {
+            color: #60a5fa;
+            border-bottom-color: #60a5fa;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 16px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* OGGI */
+        .oggi-card {
             background: linear-gradient(135deg, #1e40af, #7c3aed);
             border-radius: 16px;
             padding: 20px;
-            margin: 20px;
             text-align: center;
+            margin-bottom: 16px;
             box-shadow: 0 10px 40px rgba(124, 58, 237, 0.3);
         }
         
-        .oggi-turno {
-            font-size: 48px;
-            font-weight: 800;
-            margin: 10px 0;
-        }
+        .oggi-label { font-size: 12px; opacity: 0.8; }
+        .oggi-data { font-size: 14px; margin: 4px 0; }
+        .oggi-turno { font-size: 42px; font-weight: 800; margin: 8px 0; }
+        .oggi-orario { font-size: 18px; opacity: 0.9; }
+        .oggi-countdown { margin-top: 12px; font-size: 14px; opacity: 0.8; }
         
-        .oggi-orario {
-            font-size: 20px;
-            opacity: 0.9;
-        }
-        
-        .countdown {
-            margin-top: 15px;
-            font-size: 16px;
-            opacity: 0.8;
-        }
-        
-        .prossimi {
+        .prossimi-lista {
             background: #1e293b;
-            margin: 20px;
-            border-radius: 16px;
-            padding: 20px;
-            border: 1px solid #334155;
-        }
-        
-        .prossimi h3 {
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: #94a3b8;
+            border-radius: 12px;
+            overflow: hidden;
         }
         
         .prossimo-item {
             display: flex;
             align-items: center;
-            padding: 12px;
-            margin-bottom: 8px;
-            border-radius: 12px;
-            background: #0f172a;
+            padding: 12px 16px;
+            border-bottom: 1px solid #334155;
         }
+        
+        .prossimo-item:last-child { border-bottom: none; }
         
         .prossimo-data {
-            width: 60px;
+            width: 50px;
             text-align: center;
-            font-weight: 600;
         }
         
-        .prossimo-giorno {
-            font-size: 24px;
-        }
+        .prossimo-giorno { font-size: 20px; font-weight: 700; }
+        .prossimo-sett { font-size: 10px; color: #64748b; }
         
-        .prossimo-mese {
-            font-size: 12px;
-            opacity: 0.7;
-        }
-        
-        .prossimo-turno {
+        .prossimo-info {
             flex: 1;
-            margin-left: 15px;
+            margin-left: 12px;
         }
         
-        .prossimo-tipo {
-            font-weight: 600;
-            font-size: 16px;
-        }
-        
-        .prossimo-orario {
-            font-size: 14px;
-            opacity: 0.7;
-        }
+        .prossimo-tipo { font-weight: 600; }
+        .prossimo-orario { font-size: 12px; color: #94a3b8; }
         
         .badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
         }
         
         .badge-mat { background: #f59e0b; color: #000; }
@@ -127,167 +128,200 @@
         .badge-not { background: #8b5cf6; color: #fff; }
         .badge-r { background: #10b981; color: #fff; }
         
-        .calendario {
-            margin: 20px;
-        }
-        
+        /* CALENDARIO */
         .mese-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         
-        .mese-nome {
-            font-size: 20px;
-            font-weight: 700;
-        }
+        .mese-nome { font-size: 18px; font-weight: 700; }
         
         .nav-btn {
             background: #334155;
             border: none;
             color: #e2e8f0;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-size: 16px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
             cursor: pointer;
-            transition: all 0.2s;
         }
-        
-        .nav-btn:hover { background: #475569; }
-        .nav-btn:active { transform: scale(0.95); }
         
         .griglia {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
+            gap: 3px;
         }
         
         .giorno-header {
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             color: #64748b;
-            padding: 8px 0;
+            padding: 6px 0;
         }
         
         .giorno {
             aspect-ratio: 1;
-            border-radius: 12px;
+            border-radius: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            position: relative;
-            transition: all 0.2s;
             cursor: pointer;
+            transition: transform 0.1s;
         }
         
-        .giorno:hover { transform: scale(1.05); }
-        .giorno:active { transform: scale(0.95); }
+        .giorno:active { transform: scale(0.9); }
         
-        .giorno-num {
-            font-size: 16px;
-            margin-bottom: 2px;
-        }
-        
-        .giorno-turno {
-            font-size: 10px;
-            opacity: 0.9;
-        }
+        .giorno-num { font-size: 14px; }
+        .giorno-tipo { font-size: 9px; opacity: 0.9; }
         
         .giorno-mat { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; }
         .giorno-pom { background: linear-gradient(135deg, #60a5fa, #3b82f6); color: #fff; }
         .giorno-not { background: linear-gradient(135deg, #a78bfa, #8b5cf6); color: #fff; }
         .giorno-r { background: linear-gradient(135deg, #34d399, #10b981); color: #fff; }
         .giorno-vuoto { background: transparent; }
-        
-        .giorno-oggi {
-            box-shadow: 0 0 0 3px #fff, 0 0 20px rgba(255,255,255,0.5);
+        .giorno-oggi { box-shadow: 0 0 0 3px #fff; }
+        .giorno-weekend { position: relative; }
+        .giorno-weekend::after {
+            content: '🎉';
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            font-size: 10px;
         }
         
-        .stats {
+        /* ANALISI */
+        .analisi-card {
             background: #1e293b;
-            margin: 20px;
-            border-radius: 16px;
-            padding: 20px;
-            border: 1px solid #334155;
-        }
-        
-        .stats h3 {
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: #94a3b8;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-        
-        .stat-card {
-            background: #0f172a;
-            padding: 15px;
             border-radius: 12px;
-            text-align: center;
+            padding: 16px;
+            margin-bottom: 12px;
         }
         
-        .stat-value {
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 4px;
-        }
-        
-        .stat-label {
-            font-size: 12px;
-            color: #64748b;
-        }
-        
-        .export-section {
-            margin: 20px;
-            padding: 20px;
-            background: linear-gradient(135deg, #065f46, #047857);
-            border-radius: 16px;
-            text-align: center;
-        }
-        
-        .export-section h3 {
-            margin-bottom: 10px;
-        }
-        
-        .export-section p {
+        .analisi-title {
             font-size: 14px;
-            opacity: 0.9;
-            margin-bottom: 15px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 12px;
         }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .stat-row:last-child { border-bottom: none; }
+        
+        .stat-label { color: #94a3b8; font-size: 14px; }
+        .stat-value { font-weight: 700; font-size: 14px; }
+        
+        .weekend-item {
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .weekend-date { font-weight: 600; margin-bottom: 4px; }
+        .weekend-days { font-size: 12px; color: #10b981; }
+        
+        .ferie-suggestion {
+            background: linear-gradient(135deg, #065f46, #047857);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .ferie-title { font-weight: 600; margin-bottom: 4px; }
+        .ferie-desc { font-size: 12px; opacity: 0.9; }
+        .ferie-gain { font-size: 14px; font-weight: 700; color: #34d399; margin-top: 4px; }
+        
+        /* SQUADRA */
+        .collega-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .collega-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .collega-nome { font-weight: 600; }
+        .collega-offset { font-size: 12px; color: #64748b; }
+        
+        .collega-turni {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .collega-giorno {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        .add-collega {
+            background: #334155;
+            border: 2px dashed #475569;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        .add-collega:hover { background: #3f4f63; }
+        
+        /* EXPORT */
+        .export-card {
+            background: linear-gradient(135deg, #065f46, #047857);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        
+        .export-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+        .export-desc { font-size: 13px; opacity: 0.9; margin-bottom: 16px; }
         
         .export-btn {
             background: #fff;
             color: #065f46;
             border: none;
-            padding: 15px 30px;
-            border-radius: 12px;
-            font-size: 16px;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            width: 100%;
         }
         
-        .export-btn:hover { transform: scale(1.05); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .export-btn:active { transform: scale(0.95); }
         
+        /* MODAL */
         .modal {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             backdrop-filter: blur(10px);
             display: flex;
             align-items: center;
@@ -298,343 +332,358 @@
         
         .modal-content {
             background: #1e293b;
-            border-radius: 20px;
-            padding: 25px;
-            max-width: 400px;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 360px;
             width: 100%;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
             text-align: center;
         }
         
-        .modal h3 {
-            font-size: 20px;
-            margin-bottom: 15px;
+        .modal-input {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px;
+            color: #e2e8f0;
+            font-size: 14px;
+            margin-bottom: 12px;
         }
         
-        .modal p {
-            font-size: 14px;
-            opacity: 0.8;
-            margin-bottom: 20px;
-            line-height: 1.6;
+        .modal-input:focus {
+            outline: none;
+            border-color: #60a5fa;
         }
         
         .modal-btn {
-            background: #3b82f6;
-            color: #fff;
+            width: 100%;
+            padding: 12px;
             border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            margin: 5px;
+            margin-bottom: 8px;
         }
         
-        .modal-btn-secondary {
-            background: #475569;
-        }
+        .modal-btn-primary { background: #3b82f6; color: #fff; }
+        .modal-btn-secondary { background: #475569; color: #fff; }
+        .modal-btn-danger { background: #dc2626; color: #fff; }
         
         .legenda {
-            margin: 20px;
-            padding: 15px;
-            background: #1e293b;
-            border-radius: 12px;
             display: flex;
             justify-content: space-around;
-            flex-wrap: wrap;
-            gap: 10px;
+            padding: 12px;
+            background: #1e293b;
+            border-radius: 8px;
+            margin-top: 12px;
         }
         
         .legenda-item {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 12px;
+            gap: 4px;
+            font-size: 10px;
         }
         
-        .legenda-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
+        .legenda-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
         }
         
-        .footer {
-            text-align: center;
-            padding: 20px;
-            color: #64748b;
+        .notti-consecutive {
+            background: linear-gradient(135deg, #7c2d12, #9a3412);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .notti-alert {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .notti-detail {
             font-size: 12px;
+            opacity: 0.9;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>📅 Turni 4ª Squadra 2026</h1>
-        <div id="data-oggi"></div>
     </div>
     
-    <div class="oggi-info" id="oggi-box">
-        <!-- Populated by JS -->
+    <div class="tabs">
+        <div class="tab active" onclick="cambiaTab('oggi')">🏠 Oggi</div>
+        <div class="tab" onclick="cambiaTab('calendario')">📅 Mese</div>
+        <div class="tab" onclick="cambiaTab('analisi')">📊 Analisi</div>
+        <div class="tab" onclick="cambiaTab('squadra')">👥 Squadra</div>
+        <div class="tab" onclick="cambiaTab('export')">📲 Export</div>
     </div>
     
-    <div class="prossimi">
-        <h3>📋 Prossimi 7 giorni</h3>
-        <div id="prossimi-lista"></div>
+    <div id="tab-oggi" class="tab-content active">
+        <div class="oggi-card">
+            <div class="oggi-label">OGGI</div>
+            <div class="oggi-data" id="oggi-data"></div>
+            <div class="oggi-turno" id="oggi-turno"></div>
+            <div class="oggi-orario" id="oggi-orario"></div>
+            <div class="oggi-countdown" id="oggi-countdown"></div>
+        </div>
+        
+        <h3 style="font-size: 16px; margin-bottom: 12px; color: #94a3b8;">Prossimi 7 giorni</h3>
+        <div class="prossimi-lista" id="prossimi-lista"></div>
     </div>
     
-    <div class="export-section">
-        <h3>📲 Sincronizza col telefono</h3>
-        <p>Scarica tutti i turni del 2026 e importali nel tuo calendario (iPhone, Android, Google Calendar)</p>
-        <button class="export-btn" onclick="esportaICS()">
-            <span>⬇️</span> Scarica Calendario (.ics)
-        </button>
-    </div>
-    
-    <div class="calendario">
+    <div id="tab-calendario" class="tab-content">
         <div class="mese-nav">
-            <button class="nav-btn" onclick="cambiaMese(-1)">◀ Prec</button>
+            <button class="nav-btn" onclick="cambiaMese(-1)">◀</button>
             <div class="mese-nome" id="mese-nome"></div>
-            <button class="nav-btn" onclick="cambiaMese(1)">Succ ▶</button>
+            <button class="nav-btn" onclick="cambiaMese(1)">▶</button>
         </div>
         <div class="griglia" id="griglia-mese"></div>
-    </div>
-    
-    <div class="legenda">
-        <div class="legenda-item">
-            <div class="legenda-color giorno-mat"></div>
-            <span>Mattina 6-14</span>
-        </div>
-        <div class="legenda-item">
-            <div class="legenda-color giorno-pom"></div>
-            <span>Pomeriggio 14-22</span>
-        </div>
-        <div class="legenda-item">
-            <div class="legenda-color giorno-not"></div>
-            <span>Notte 22-6</span>
-        </div>
-        <div class="legenda-item">
-            <div class="legenda-color giorno-r"></div>
-            <span>Riposo</span>
+        <div class="legenda">
+            <div class="legenda-item"><div class="legenda-dot giorno-mat"></div>Mat</div>
+            <div class="legenda-item"><div class="legenda-dot giorno-pom"></div>Pom</div>
+            <div class="legenda-item"><div class="legenda-dot giorno-not"></div>Not</div>
+            <div class="legenda-item"><div class="legenda-dot giorno-r"></div>Rip</div>
         </div>
     </div>
     
-    <div class="stats">
-        <h3>📊 Statistiche 2026</h3>
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value" id="stat-lavoro">0</div>
-                <div class="stat-label">Giorni lavoro</div>
+    <div id="tab-analisi" class="tab-content">
+        <div class="analisi-card">
+            <div class="analisi-title">📈 Statistiche Anno 2026</div>
+            <div class="stat-row">
+                <span class="stat-label">Giorni lavorati</span>
+                <span class="stat-value" id="stat-lavoro">0</span>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="stat-riposo">0</div>
-                <div class="stat-label">Giorni riposo</div>
+            <div class="stat-row">
+                <span class="stat-label">Giorni riposo</span>
+                <span class="stat-value" id="stat-riposo">0</span>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="stat-notti">0</div>
-                <div class="stat-label">Turni notte</div>
+            <div class="stat-row">
+                <span class="stat-label">Turni notte</span>
+                <span class="stat-value" id="stat-notti">0</span>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="stat-ore">0</div>
-                <div class="stat-label">Ore totali</div>
+            <div class="stat-row">
+                <span class="stat-label">Ore totali</span>
+                <span class="stat-value" id="stat-ore">0</span>
             </div>
+            <div class="stat-row">
+                <span class="stat-label">Weekend liberi (Sab+Dom)</span>
+                <span class="stat-value" id="stat-weekend">0</span>
+            </div>
+        </div>
+        
+        <div class="analisi-card">
+            <div class="analisi-title">🌙 Notti Consecutive (massimo)</div>
+            <div id="notti-consecutive"></div>
+        </div>
+        
+        <div class="analisi-card">
+            <div class="analisi-title">🎉 Prossimi Weekend Liberi</div>
+            <div id="weekend-liberi"></div>
+        </div>
+        
+        <div class="analisi-card">
+            <div class="analisi-title">🏖️ Suggerimenti Ferie Smart</div>
+            <div id="ferie-smart"></div>
         </div>
     </div>
     
-    <div class="footer">
-        4ª Squadra • Aggiornato Nov 2025<br>
-        Tocca un giorno per dettagli
+    <div id="tab-squadra" class="tab-content">
+        <div style="margin-bottom: 12px; color: #94a3b8; font-size: 14px;">
+            Aggiungi colleghi per vedere i loro turni
+        </div>
+        <div id="colleghi-lista"></div>
+        <div class="add-collega" onclick="mostraModalCollega()">
+            <div style="font-size: 24px; margin-bottom: 8px;">➕</div>
+            <div style="font-size: 14px; color: #94a3b8;">Aggiungi Collega</div>
+        </div>
+    </div>
+    
+    <div id="tab-export" class="tab-content">
+        <div class="export-card">
+            <div class="export-title">📲 Sincronizza col Telefono</div>
+            <div class="export-desc">
+                Scarica il file ICS con tutti i turni 2026.<br>
+                Include notifiche automatiche 1h e 15min prima!
+            </div>
+            <button class="export-btn" onclick="esportaICS()">⬇️ Scarica Calendario</button>
+        </div>
+        
+        <div class="export-card" style="background: linear-gradient(135deg, #1e40af, #3b82f6);">
+            <div class="export-title">📋 Copia Turni Mese</div>
+            <div class="export-desc">
+                Copia i turni del mese corrente come testo
+            </div>
+            <button class="export-btn" style="color: #1e40af;" onclick="copiaTurniMese()">📋 Copia Testo</button>
+        </div>
+        
+        <div class="export-card" style="background: linear-gradient(135deg, #7c2d12, #dc2626);">
+            <div class="export-title">🗑️ Reset Dati</div>
+            <div class="export-desc">
+                Cancella tutti i dati salvati (colleghi, preferenze)
+            </div>
+            <button class="export-btn" style="color: #7c2d12;" onclick="resetDati()">🗑️ Reset</button>
+        </div>
     </div>
     
     <div id="modal-container"></div>
 
     <script>
-        // Configurazione turni
+        // ========== CONFIGURAZIONE ==========
         const CICLO = [
-            { tipo: 'Not', nome: 'Notte', orario: '22:00 - 06:00', ore: 8 },
-            { tipo: 'Not', nome: 'Notte', orario: '22:00 - 06:00', ore: 8 },
-            { tipo: 'Not', nome: 'Notte', orario: '22:00 - 06:00', ore: 8 },
-            { tipo: 'R', nome: 'Riposo', orario: 'Giorno libero', ore: 0 },
-            { tipo: 'Pom', nome: 'Pomeriggio', orario: '14:00 - 22:00', ore: 8 },
-            { tipo: 'Pom', nome: 'Pomeriggio', orario: '14:00 - 22:00', ore: 8 },
-            { tipo: 'Pom', nome: 'Pomeriggio', orario: '14:00 - 22:00', ore: 8 },
-            { tipo: 'R', nome: 'Riposo', orario: 'Giorno libero', ore: 0 },
-            { tipo: 'Mat', nome: 'Mattina', orario: '06:00 - 14:00', ore: 8 },
-            { tipo: 'Mat', nome: 'Mattina', orario: '06:00 - 14:00', ore: 8 },
-            { tipo: 'Mat', nome: 'Mattina', orario: '06:00 - 14:00', ore: 8 },
-            { tipo: 'R', nome: 'Riposo', orario: 'Giorno libero', ore: 0 },
+            { tipo: 'Not', nome: 'Notte', orario: '22:00 - 06:00', ore: 8, emoji: '🌙' },
+            { tipo: 'Not', nome: 'Notte', orario: '22:00 - 06:00', ore: 8, emoji: '🌙' },
+            { tipo: 'Not', nome: 'Notte', orario: '22:00 - 06:00', ore: 8, emoji: '🌙' },
+            { tipo: 'R', nome: 'Riposo', orario: 'Giorno libero', ore: 0, emoji: '😎' },
+            { tipo: 'Pom', nome: 'Pomeriggio', orario: '14:00 - 22:00', ore: 8, emoji: '☀️' },
+            { tipo: 'Pom', nome: 'Pomeriggio', orario: '14:00 - 22:00', ore: 8, emoji: '☀️' },
+            { tipo: 'Pom', nome: 'Pomeriggio', orario: '14:00 - 22:00', ore: 8, emoji: '☀️' },
+            { tipo: 'R', nome: 'Riposo', orario: 'Giorno libero', ore: 0, emoji: '😎' },
+            { tipo: 'Mat', nome: 'Mattina', orario: '06:00 - 14:00', ore: 8, emoji: '🌅' },
+            { tipo: 'Mat', nome: 'Mattina', orario: '06:00 - 14:00', ore: 8, emoji: '🌅' },
+            { tipo: 'Mat', nome: 'Mattina', orario: '06:00 - 14:00', ore: 8, emoji: '🌅' },
+            { tipo: 'R', nome: 'Riposo', orario: 'Giorno libero', ore: 0, emoji: '😎' },
         ];
         
         const MESI = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
                      'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
         const GIORNI_SETT = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+        const GIORNI_SETT_FULL = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
         const GIORNI_MESE = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
         
         let meseCorrente = new Date().getMonth();
+        let colleghi = JSON.parse(localStorage.getItem('colleghi') || '[]');
         
-        // Calcola il turno per una data specifica
-        function getTurno(anno, mese, giorno) {
-            if (anno !== 2026) return null;
-            
-            // Calcola giorni dall'inizio dell'anno
+        // ========== FUNZIONI CORE ==========
+        function getTurno(anno, mese, giorno, offset = 0) {
+            if (anno !== 2026) return CICLO[0];
             let giornoAnno = giorno;
-            for (let i = 0; i < mese; i++) {
-                giornoAnno += GIORNI_MESE[i];
-            }
-            
-            // Il 1° gennaio 2026 è il 2° giorno di Notte (indice 1)
-            const indiceCiclo = (giornoAnno - 1 + 1) % 12;
-            return CICLO[indiceCiclo];
+            for (let i = 0; i < mese; i++) giornoAnno += GIORNI_MESE[i];
+            const indiceCiclo = (giornoAnno - 1 + 1 + offset) % 12;
+            return CICLO[indiceCiclo < 0 ? indiceCiclo + 12 : indiceCiclo];
         }
         
-        // Formatta data
-        function formatData(date) {
-            const giorni = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
-            return `${giorni[date.getDay()]} ${date.getDate()} ${MESI[date.getMonth()]} ${date.getFullYear()}`;
+        function formatDataCompleta(date) {
+            return `${GIORNI_SETT_FULL[date.getDay()]} ${date.getDate()} ${MESI[date.getMonth()]}`;
         }
         
-        // Aggiorna info oggi
+        // ========== TAB OGGI ==========
         function aggiornaOggi() {
             const oggi = new Date();
-            document.getElementById('data-oggi').textContent = formatData(oggi);
-            
-            // Per test usiamo 2026, in produzione usa oggi.getFullYear()
             const annoTest = 2026;
-            const meseTest = oggi.getMonth();
-            const giornoTest = oggi.getDate();
+            const turno = getTurno(annoTest, oggi.getMonth(), oggi.getDate());
             
-            const turno = getTurno(annoTest, meseTest, giornoTest);
+            document.getElementById('oggi-data').textContent = formatDataCompleta(oggi);
+            document.getElementById('oggi-turno').textContent = turno.emoji + ' ' + turno.nome;
+            document.getElementById('oggi-orario').textContent = turno.orario;
             
-            if (turno) {
-                const oggiBox = document.getElementById('oggi-box');
-                oggiBox.innerHTML = `
-                    <div style="font-size: 14px; opacity: 0.8;">OGGI</div>
-                    <div class="oggi-turno">${turno.nome}</div>
-                    <div class="oggi-orario">${turno.orario}</div>
-                    <div class="countdown" id="countdown"></div>
-                `;
-                
-                // Countdown al prossimo turno
-                aggiornaCountdown(turno);
-            }
+            aggiornaCountdown(turno);
+            aggiornaProssimi();
         }
         
         function aggiornaCountdown(turno) {
             const ora = new Date();
-            let messaggio = '';
+            let msg = '';
             
             if (turno.tipo === 'R') {
-                messaggio = '😎 Goditi il riposo!';
+                msg = '😎 Goditi il riposo!';
             } else if (turno.tipo === 'Mat') {
-                const fine = new Date();
-                fine.setHours(14, 0, 0, 0);
-                if (ora < fine) {
+                if (ora.getHours() < 14) {
+                    const fine = new Date(); fine.setHours(14, 0, 0, 0);
                     const diff = fine - ora;
-                    const ore = Math.floor(diff / 3600000);
-                    const min = Math.floor((diff % 3600000) / 60000);
-                    messaggio = `⏰ Fine turno tra ${ore}h ${min}m`;
+                    msg = `⏰ Fine tra ${Math.floor(diff/3600000)}h ${Math.floor((diff%3600000)/60000)}m`;
                 } else {
-                    messaggio = '✅ Turno completato!';
+                    msg = '✅ Turno completato!';
                 }
             } else if (turno.tipo === 'Pom') {
-                const fine = new Date();
-                fine.setHours(22, 0, 0, 0);
                 if (ora.getHours() < 14) {
-                    const inizio = new Date();
-                    inizio.setHours(14, 0, 0, 0);
+                    const inizio = new Date(); inizio.setHours(14, 0, 0, 0);
                     const diff = inizio - ora;
-                    const ore = Math.floor(diff / 3600000);
-                    const min = Math.floor((diff % 3600000) / 60000);
-                    messaggio = `🕐 Inizio tra ${ore}h ${min}m`;
-                } else if (ora < fine) {
+                    msg = `🕐 Inizio tra ${Math.floor(diff/3600000)}h ${Math.floor((diff%3600000)/60000)}m`;
+                } else if (ora.getHours() < 22) {
+                    const fine = new Date(); fine.setHours(22, 0, 0, 0);
                     const diff = fine - ora;
-                    const ore = Math.floor(diff / 3600000);
-                    const min = Math.floor((diff % 3600000) / 60000);
-                    messaggio = `⏰ Fine turno tra ${ore}h ${min}m`;
+                    msg = `⏰ Fine tra ${Math.floor(diff/3600000)}h ${Math.floor((diff%3600000)/60000)}m`;
                 } else {
-                    messaggio = '✅ Turno completato!';
+                    msg = '✅ Turno completato!';
                 }
-            } else if (turno.tipo === 'Not') {
-                messaggio = '🌙 Turno notturno';
+            } else {
+                msg = '🌙 Turno notturno attivo';
             }
             
-            document.getElementById('countdown').textContent = messaggio;
+            document.getElementById('oggi-countdown').textContent = msg;
         }
         
-        // Mostra prossimi giorni
-        function mostraProssimi() {
+        function aggiornaProssimi() {
             const lista = document.getElementById('prossimi-lista');
             lista.innerHTML = '';
-            
             const oggi = new Date();
             
             for (let i = 0; i < 7; i++) {
                 const data = new Date(2026, oggi.getMonth(), oggi.getDate() + i);
                 const turno = getTurno(2026, data.getMonth(), data.getDate());
+                const giorniSett = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
                 
-                if (turno) {
-                    const item = document.createElement('div');
-                    item.className = 'prossimo-item';
-                    item.innerHTML = `
+                lista.innerHTML += `
+                    <div class="prossimo-item">
                         <div class="prossimo-data">
                             <div class="prossimo-giorno">${data.getDate()}</div>
-                            <div class="prossimo-mese">${MESI[data.getMonth()].substring(0, 3)}</div>
+                            <div class="prossimo-sett">${giorniSett[data.getDay()]}</div>
                         </div>
-                        <div class="prossimo-turno">
-                            <div class="prossimo-tipo">${turno.nome}</div>
+                        <div class="prossimo-info">
+                            <div class="prossimo-tipo">${turno.emoji} ${turno.nome}</div>
                             <div class="prossimo-orario">${turno.orario}</div>
                         </div>
                         <span class="badge badge-${turno.tipo.toLowerCase()}">${turno.tipo}</span>
-                    `;
-                    lista.appendChild(item);
-                }
+                    </div>
+                `;
             }
         }
         
-        // Renderizza mese
+        // ========== TAB CALENDARIO ==========
         function renderizzaMese() {
             const griglia = document.getElementById('griglia-mese');
             griglia.innerHTML = '';
-            
             document.getElementById('mese-nome').textContent = `${MESI[meseCorrente]} 2026`;
             
-            // Header giorni settimana
             GIORNI_SETT.forEach(g => {
-                const div = document.createElement('div');
-                div.className = 'giorno-header';
-                div.textContent = g;
-                griglia.appendChild(div);
+                griglia.innerHTML += `<div class="giorno-header">${g}</div>`;
             });
             
-            // Primo giorno del mese (0 = Lun)
             const primoGiorno = new Date(2026, meseCorrente, 1).getDay();
             const offset = primoGiorno === 0 ? 6 : primoGiorno - 1;
             
-            // Celle vuote
             for (let i = 0; i < offset; i++) {
-                const div = document.createElement('div');
-                div.className = 'giorno giorno-vuoto';
-                griglia.appendChild(div);
+                griglia.innerHTML += `<div class="giorno giorno-vuoto"></div>`;
             }
             
-            // Giorni del mese
             const oggi = new Date();
-            const isOggiMese = oggi.getMonth() === meseCorrente;
-            
             for (let g = 1; g <= GIORNI_MESE[meseCorrente]; g++) {
                 const turno = getTurno(2026, meseCorrente, g);
-                const div = document.createElement('div');
+                const isOggi = oggi.getMonth() === meseCorrente && oggi.getDate() === g;
+                const dataG = new Date(2026, meseCorrente, g);
+                const isWeekendLibero = (dataG.getDay() === 0 || dataG.getDay() === 6) && turno.tipo === 'R';
                 
                 let classi = `giorno giorno-${turno.tipo.toLowerCase()}`;
-                if (isOggiMese && g === oggi.getDate()) {
-                    classi += ' giorno-oggi';
-                }
+                if (isOggi) classi += ' giorno-oggi';
+                if (isWeekendLibero) classi += ' giorno-weekend';
                 
-                div.className = classi;
-                div.innerHTML = `
-                    <div class="giorno-num">${g}</div>
-                    <div class="giorno-turno">${turno.tipo}</div>
+                griglia.innerHTML += `
+                    <div class="${classi}" onclick="mostraDettaglioGiorno(${g})">
+                        <div class="giorno-num">${g}</div>
+                        <div class="giorno-tipo">${turno.tipo}</div>
+                    </div>
                 `;
-                
-                div.onclick = () => mostraDettaglio(g, turno);
-                griglia.appendChild(div);
             }
         }
         
@@ -645,45 +694,45 @@
             renderizzaMese();
         }
         
-        function mostraDettaglio(giorno, turno) {
+        function mostraDettaglioGiorno(giorno) {
+            const turno = getTurno(2026, meseCorrente, giorno);
             const data = new Date(2026, meseCorrente, giorno);
-            const nomeGiorno = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'][data.getDay()];
             
-            const modal = document.getElementById('modal-container');
-            modal.innerHTML = `
-                <div class="modal" onclick="chiudiModal(event)">
-                    <div class="modal-content" onclick="event.stopPropagation()">
-                        <h3>${nomeGiorno} ${giorno} ${MESI[meseCorrente]}</h3>
-                        <p>
-                            <strong style="font-size: 24px;">${turno.nome}</strong><br><br>
-                            🕐 ${turno.orario}<br>
-                            ⏱️ ${turno.ore} ore di lavoro
-                        </p>
-                        <button class="modal-btn" onclick="chiudiModal()">Chiudi</button>
-                    </div>
+            mostraModal(`
+                <div class="modal-title">${formatDataCompleta(data)}</div>
+                <div style="text-align: center; margin-bottom: 16px;">
+                    <div style="font-size: 48px; margin-bottom: 8px;">${turno.emoji}</div>
+                    <div style="font-size: 24px; font-weight: 700;">${turno.nome}</div>
+                    <div style="color: #94a3b8;">${turno.orario}</div>
+                    <div style="margin-top: 8px; color: #60a5fa;">${turno.ore} ore</div>
                 </div>
-            `;
+                <button class="modal-btn modal-btn-secondary" onclick="chiudiModal()">Chiudi</button>
+            `);
         }
         
-        function chiudiModal(e) {
-            if (!e || e.target.classList.contains('modal')) {
-                document.getElementById('modal-container').innerHTML = '';
-            }
-        }
-        
-        // Calcola statistiche
-        function calcolaStats() {
-            let lavoro = 0, riposo = 0, notti = 0, ore = 0;
+        // ========== TAB ANALISI ==========
+        function calcolaStatistiche() {
+            let lavoro = 0, riposo = 0, notti = 0, ore = 0, weekendLiberi = 0;
             
             for (let m = 0; m < 12; m++) {
                 for (let g = 1; g <= GIORNI_MESE[m]; g++) {
                     const turno = getTurno(2026, m, g);
+                    const data = new Date(2026, m, g);
+                    
                     if (turno.tipo === 'R') {
                         riposo++;
                     } else {
                         lavoro++;
                         ore += turno.ore;
                         if (turno.tipo === 'Not') notti++;
+                    }
+                    
+                    // Weekend libero (Sabato E Domenica entrambi riposo)
+                    if (data.getDay() === 6) { // Sabato
+                        const domTurno = getTurno(2026, m, g + 1);
+                        if (turno.tipo === 'R' && domTurno && domTurno.tipo === 'R') {
+                            weekendLiberi++;
+                        }
                     }
                 }
             }
@@ -692,9 +741,196 @@
             document.getElementById('stat-riposo').textContent = riposo;
             document.getElementById('stat-notti').textContent = notti;
             document.getElementById('stat-ore').textContent = ore.toLocaleString();
+            document.getElementById('stat-weekend').textContent = weekendLiberi;
+            
+            calcolaNottiConsecutive();
+            calcolaWeekendLiberi();
+            calcolaFerieSmart();
         }
         
-        // EXPORT ICS - Funzionalità principale!
+        function calcolaNottiConsecutive() {
+            let maxConsec = 0, currentConsec = 0;
+            let maxStart = null, currentStart = null;
+            
+            for (let m = 0; m < 12; m++) {
+                for (let g = 1; g <= GIORNI_MESE[m]; g++) {
+                    const turno = getTurno(2026, m, g);
+                    if (turno.tipo === 'Not') {
+                        if (currentConsec === 0) currentStart = { m, g };
+                        currentConsec++;
+                    } else {
+                        if (currentConsec > maxConsec) {
+                            maxConsec = currentConsec;
+                            maxStart = currentStart;
+                        }
+                        currentConsec = 0;
+                    }
+                }
+            }
+            
+            const container = document.getElementById('notti-consecutive');
+            container.innerHTML = `
+                <div class="notti-consecutive">
+                    <div class="notti-alert">⚠️ Max ${maxConsec} notti consecutive</div>
+                    <div class="notti-detail">
+                        Il ciclo prevede sempre 3 notti consecutive seguite da riposo.
+                        Questo è nella norma per turni rotativi.
+                    </div>
+                </div>
+            `;
+        }
+        
+        function calcolaWeekendLiberi() {
+            const container = document.getElementById('weekend-liberi');
+            container.innerHTML = '';
+            const oggi = new Date();
+            let count = 0;
+            
+            for (let m = oggi.getMonth(); m < 12 && count < 5; m++) {
+                const startG = m === oggi.getMonth() ? oggi.getDate() : 1;
+                for (let g = startG; g <= GIORNI_MESE[m] && count < 5; g++) {
+                    const data = new Date(2026, m, g);
+                    if (data.getDay() === 6) { // Sabato
+                        const sabTurno = getTurno(2026, m, g);
+                        const domTurno = getTurno(2026, m, g + 1);
+                        if (sabTurno.tipo === 'R' && domTurno && domTurno.tipo === 'R') {
+                            container.innerHTML += `
+                                <div class="weekend-item">
+                                    <div class="weekend-date">🎉 ${g}-${g+1} ${MESI[m]}</div>
+                                    <div class="weekend-days">Sabato e Domenica liberi!</div>
+                                </div>
+                            `;
+                            count++;
+                        }
+                    }
+                }
+            }
+            
+            if (count === 0) {
+                container.innerHTML = '<div style="color: #94a3b8; font-size: 14px;">Nessun weekend completamente libero trovato</div>';
+            }
+        }
+        
+        function calcolaFerieSmart() {
+            const container = document.getElementById('ferie-smart');
+            container.innerHTML = '';
+            const oggi = new Date();
+            let suggestions = [];
+            
+            // Cerca opportunità: giorni di lavoro tra due riposi
+            for (let m = oggi.getMonth(); m < 12; m++) {
+                for (let g = 1; g <= GIORNI_MESE[m] - 2; g++) {
+                    const t1 = getTurno(2026, m, g);
+                    const t2 = getTurno(2026, m, g + 1);
+                    const t3 = getTurno(2026, m, g + 2);
+                    
+                    // Se hai R - Lavoro - R, prendi 1 giorno = 3 giorni liberi
+                    if (t1.tipo === 'R' && t2.tipo !== 'R' && t3.tipo === 'R') {
+                        suggestions.push({
+                            tipo: '1 giorno ferie = 3 giorni liberi',
+                            data: `${g+1} ${MESI[m]}`,
+                            guadagno: '+2 giorni',
+                            priorita: 3
+                        });
+                    }
+                    
+                    // Se hai R - L - L - R, prendi 2 giorni = 4 giorni liberi
+                    if (g <= GIORNI_MESE[m] - 3) {
+                        const t4 = getTurno(2026, m, g + 3);
+                        if (t1.tipo === 'R' && t2.tipo !== 'R' && t3.tipo !== 'R' && t4.tipo === 'R') {
+                            suggestions.push({
+                                tipo: '2 giorni ferie = 4 giorni liberi',
+                                data: `${g+1}-${g+2} ${MESI[m]}`,
+                                guadagno: '+2 giorni',
+                                priorita: 2
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Mostra top 5
+            suggestions.sort((a, b) => b.priorita - a.priorita);
+            suggestions.slice(0, 5).forEach(s => {
+                container.innerHTML += `
+                    <div class="ferie-suggestion">
+                        <div class="ferie-title">${s.tipo}</div>
+                        <div class="ferie-desc">📅 ${s.data}</div>
+                        <div class="ferie-gain">${s.guadagno}</div>
+                    </div>
+                `;
+            });
+            
+            if (suggestions.length === 0) {
+                container.innerHTML = '<div style="color: #94a3b8; font-size: 14px;">Analisi ferie in corso...</div>';
+            }
+        }
+        
+        // ========== TAB SQUADRA ==========
+        function renderizzaColleghi() {
+            const lista = document.getElementById('colleghi-lista');
+            lista.innerHTML = '';
+            const oggi = new Date();
+            
+            colleghi.forEach((collega, idx) => {
+                let turniHTML = '';
+                for (let i = 0; i < 7; i++) {
+                    const data = new Date(2026, oggi.getMonth(), oggi.getDate() + i);
+                    const turno = getTurno(2026, data.getMonth(), data.getDate(), collega.offset);
+                    turniHTML += `
+                        <div class="collega-giorno giorno-${turno.tipo.toLowerCase()}">
+                            <div>${data.getDate()}</div>
+                            <div>${turno.tipo}</div>
+                        </div>
+                    `;
+                }
+                
+                lista.innerHTML += `
+                    <div class="collega-card">
+                        <div class="collega-header">
+                            <div class="collega-nome">${collega.nome}</div>
+                            <button style="background: #dc2626; border: none; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;" onclick="rimuoviCollega(${idx})">✕</button>
+                        </div>
+                        <div class="collega-turni">${turniHTML}</div>
+                    </div>
+                `;
+            });
+        }
+        
+        function mostraModalCollega() {
+            mostraModal(`
+                <div class="modal-title">Aggiungi Collega</div>
+                <input type="text" id="collega-nome" class="modal-input" placeholder="Nome collega">
+                <select id="collega-offset" class="modal-input">
+                    <option value="0">Stessa squadra (stesso turno)</option>
+                    <option value="3">1ª Squadra (+3 giorni)</option>
+                    <option value="6">2ª Squadra (+6 giorni)</option>
+                    <option value="9">3ª Squadra (+9 giorni)</option>
+                </select>
+                <button class="modal-btn modal-btn-primary" onclick="aggiungiCollega()">Aggiungi</button>
+                <button class="modal-btn modal-btn-secondary" onclick="chiudiModal()">Annulla</button>
+            `);
+        }
+        
+        function aggiungiCollega() {
+            const nome = document.getElementById('collega-nome').value.trim();
+            const offset = parseInt(document.getElementById('collega-offset').value);
+            
+            if (nome) {
+                colleghi.push({ nome, offset });
+                localStorage.setItem('colleghi', JSON.stringify(colleghi));
+                renderizzaColleghi();
+                chiudiModal();
+            }
+        }
+        
+        function rimuoviCollega(idx) {
+            colleghi.splice(idx, 1);
+            localStorage.setItem('colleghi', JSON.stringify(colleghi));
+            renderizzaColleghi();
+        }
+        
+        // ========== EXPORT ==========
         function esportaICS() {
             let ics = `BEGIN:VCALENDAR
 VERSION:2.0
@@ -705,12 +941,9 @@ X-WR-CALNAME:Turni 4ª Squadra 2026
 X-WR-TIMEZONE:Europe/Rome
 `;
             
-            // Genera eventi per tutto l'anno
             for (let m = 0; m < 12; m++) {
                 for (let g = 1; g <= GIORNI_MESE[m]; g++) {
                     const turno = getTurno(2026, m, g);
-                    
-                    // Formatta data per ICS
                     const meseStr = String(m + 1).padStart(2, '0');
                     const giornoStr = String(g).padStart(2, '0');
                     const dataStr = `2026${meseStr}${giornoStr}`;
@@ -727,13 +960,11 @@ X-WR-TIMEZONE:Europe/Rome
                         sommario = '☀️ POMERIGGIO 14-22';
                     } else if (turno.tipo === 'Not') {
                         inizio = `${dataStr}T220000`;
-                        // La notte finisce il giorno dopo
                         const domani = new Date(2026, m, g + 1);
                         const domaniStr = `${domani.getFullYear()}${String(domani.getMonth() + 1).padStart(2, '0')}${String(domani.getDate()).padStart(2, '0')}`;
                         fine = `${domaniStr}T060000`;
                         sommario = '🌙 NOTTE 22-6';
                     } else {
-                        // Riposo - evento tutto il giorno
                         inizio = dataStr;
                         fine = dataStr;
                         sommario = '😎 RIPOSO';
@@ -775,48 +1006,95 @@ END:VEVENT
             
             ics += 'END:VCALENDAR';
             
-            // Download del file
             const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = 'Turni_4Squadra_2026.ics';
-            document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            // Mostra istruzioni
-            const modal = document.getElementById('modal-container');
-            modal.innerHTML = `
-                <div class="modal" onclick="chiudiModal(event)">
+            mostraModal(`
+                <div class="modal-title">✅ Download Completato!</div>
+                <div style="text-align: left; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
+                    <strong>iPhone/iPad:</strong><br>
+                    Apri il file → "Aggiungi tutti"<br><br>
+                    <strong>Android:</strong><br>
+                    Apri con Google Calendar<br><br>
+                    <strong>📱 Notifiche:</strong><br>
+                    1 ora e 15 min prima di ogni turno!
+                </div>
+                <button class="modal-btn modal-btn-primary" onclick="chiudiModal()">Perfetto!</button>
+            `);
+        }
+        
+        function copiaTurniMese() {
+            let testo = `TURNI ${MESI[meseCorrente].toUpperCase()} 2026\n\n`;
+            
+            for (let g = 1; g <= GIORNI_MESE[meseCorrente]; g++) {
+                const turno = getTurno(2026, meseCorrente, g);
+                const data = new Date(2026, meseCorrente, g);
+                const giorno = GIORNI_SETT_FULL[data.getDay()].substring(0, 3);
+                testo += `${g} ${giorno}: ${turno.nome} (${turno.orario})\n`;
+            }
+            
+            navigator.clipboard.writeText(testo).then(() => {
+                mostraModal(`
+                    <div class="modal-title">📋 Copiato!</div>
+                    <div style="margin-bottom: 16px;">Turni di ${MESI[meseCorrente]} copiati negli appunti</div>
+                    <button class="modal-btn modal-btn-primary" onclick="chiudiModal()">OK</button>
+                `);
+            });
+        }
+        
+        function resetDati() {
+            mostraModal(`
+                <div class="modal-title">⚠️ Reset Dati</div>
+                <div style="margin-bottom: 16px;">Vuoi davvero cancellare tutti i dati salvati?</div>
+                <button class="modal-btn modal-btn-danger" onclick="confermaReset()">Sì, Cancella</button>
+                <button class="modal-btn modal-btn-secondary" onclick="chiudiModal()">Annulla</button>
+            `);
+        }
+        
+        function confermaReset() {
+            localStorage.clear();
+            colleghi = [];
+            renderizzaColleghi();
+            chiudiModal();
+        }
+        
+        // ========== UI HELPERS ==========
+        function cambiaTab(nome) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`tab-${nome}`).classList.add('active');
+            
+            if (nome === 'analisi') calcolaStatistiche();
+            if (nome === 'squadra') renderizzaColleghi();
+        }
+        
+        function mostraModal(content) {
+            document.getElementById('modal-container').innerHTML = `
+                <div class="modal" onclick="chiudiModal()">
                     <div class="modal-content" onclick="event.stopPropagation()">
-                        <h3>✅ File Scaricato!</h3>
-                        <p>
-                            <strong>iPhone/iPad:</strong><br>
-                            Apri il file → "Aggiungi tutti gli eventi"<br><br>
-                            <strong>Android:</strong><br>
-                            Apri con Google Calendar → Importa<br><br>
-                            <strong>Computer:</strong><br>
-                            Doppio click sul file .ics<br><br>
-                            📱 Riceverai notifiche automatiche 1 ora e 15 minuti prima di ogni turno!
-                        </p>
-                        <button class="modal-btn" onclick="chiudiModal()">Perfetto!</button>
+                        ${content}
                     </div>
                 </div>
             `;
         }
         
-        // Inizializzazione
-        aggiornaOggi();
-        mostraProssimi();
-        renderizzaMese();
-        calcolaStats();
+        function chiudiModal() {
+            document.getElementById('modal-container').innerHTML = '';
+        }
         
-        // Aggiorna countdown ogni minuto
+        // ========== INIT ==========
+        aggiornaOggi();
+        renderizzaMese();
         setInterval(() => {
             const turno = getTurno(2026, new Date().getMonth(), new Date().getDate());
-            if (turno) aggiornaCountdown(turno);
+            aggiornaCountdown(turno);
         }, 60000);
     </script>
 </body>
