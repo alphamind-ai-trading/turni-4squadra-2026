@@ -540,6 +540,15 @@
 
     <script>
         // ========== CONFIGURAZIONE ==========
+        /**
+         * @description Defines the 12-day shift cycle. Each object represents a day in the cycle.
+         * @const {Array<Object>} CICLO
+         * @property {string} tipo - The type of shift (e.g., 'Not' for night).
+         * @property {string} nome - The full name of the shift (e.g., 'Notte').
+         * @property {string} orario - The time range of the shift (e.g., '22:00 - 06:00').
+         * @property {number} ore - The duration of the shift in hours.
+         * @property {string} emoji - An emoji representing the shift.
+         */
         const CICLO = [
             { tipo: 'Not', nome: 'Notte', orario: '22:00 - 06:00', ore: 8, emoji: '🌙' },
             { tipo: 'Not', nome: 'Notte', orario: '22:00 - 06:00', ore: 8, emoji: '🌙' },
@@ -555,16 +564,52 @@
             { tipo: 'R', nome: 'Riposo', orario: 'Giorno libero', ore: 0, emoji: '😎' },
         ];
         
+        /**
+         * @description An array of month names in Italian.
+         * @const {Array<string>} MESI
+         */
         const MESI = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
                      'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+
+        /**
+         * @description An array of abbreviated day names in Italian.
+         * @const {Array<string>} GIORNI_SETT
+         */
         const GIORNI_SETT = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+
+        /**
+         * @description An array of full day names in Italian.
+         * @const {Array<string>} GIORNI_SETT_FULL
+         */
         const GIORNI_SETT_FULL = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+
+        /**
+         * @description An array with the number of days in each month for a non-leap year.
+         * @const {Array<number>} GIORNI_MESE
+         */
         const GIORNI_MESE = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
         
+        /**
+         * @description The current month being displayed in the calendar.
+         * @type {number}
+         */
         let meseCorrente = new Date().getMonth();
+
+        /**
+         * @description An array of colleague objects, loaded from local storage.
+         * @type {Array<Object>}
+         */
         let colleghi = JSON.parse(localStorage.getItem('colleghi') || '[]');
         
         // ========== FUNZIONI CORE ==========
+        /**
+         * @description Calculates the shift for a given date.
+         * @param {number} anno - The year.
+         * @param {number} mese - The month (0-11).
+         * @param {number} giorno - The day (1-31).
+         * @param {number} [offset=0] - An optional offset to calculate shifts for other teams.
+         * @returns {Object} The shift object for the given date.
+         */
         function getTurno(anno, mese, giorno, offset = 0) {
             if (anno !== 2026) return CICLO[0];
             let giornoAnno = giorno;
@@ -573,11 +618,19 @@
             return CICLO[indiceCiclo < 0 ? indiceCiclo + 12 : indiceCiclo];
         }
         
+        /**
+         * @description Formats a date object into a full date string.
+         * @param {Date} date - The date to format.
+         * @returns {string} The formatted date string (e.g., "Lunedì 1 Gennaio").
+         */
         function formatDataCompleta(date) {
             return `${GIORNI_SETT_FULL[date.getDay()]} ${date.getDate()} ${MESI[date.getMonth()]}`;
         }
         
         // ========== TAB OGGI ==========
+        /**
+         * @description Updates the "Oggi" (Today) tab with the current day's shift information.
+         */
         function aggiornaOggi() {
             const oggi = new Date();
             const annoTest = 2026;
@@ -591,6 +644,10 @@
             aggiornaProssimi();
         }
         
+        /**
+         * @description Updates the countdown timer in the "Oggi" tab.
+         * @param {Object} turno - The current day's shift object.
+         */
         function aggiornaCountdown(turno) {
             const ora = new Date();
             let msg = '';
@@ -624,6 +681,9 @@
             document.getElementById('oggi-countdown').textContent = msg;
         }
         
+        /**
+         * @description Updates the list of upcoming shifts for the next 7 days.
+         */
         function aggiornaProssimi() {
             const lista = document.getElementById('prossimi-lista');
             lista.innerHTML = '';
@@ -651,6 +711,9 @@
         }
         
         // ========== TAB CALENDARIO ==========
+        /**
+         * @description Renders the calendar for the current month.
+         */
         function renderizzaMese() {
             const griglia = document.getElementById('griglia-mese');
             griglia.innerHTML = '';
@@ -687,6 +750,10 @@
             }
         }
         
+        /**
+         * @description Changes the displayed month in the calendar.
+         * @param {number} delta - The number of months to move forward or backward (e.g., 1 or -1).
+         */
         function cambiaMese(delta) {
             meseCorrente += delta;
             if (meseCorrente < 0) meseCorrente = 11;
@@ -694,6 +761,10 @@
             renderizzaMese();
         }
         
+        /**
+         * @description Shows a modal with details for a specific day.
+         * @param {number} giorno - The day of the month to show details for.
+         */
         function mostraDettaglioGiorno(giorno) {
             const turno = getTurno(2026, meseCorrente, giorno);
             const data = new Date(2026, meseCorrente, giorno);
@@ -711,6 +782,9 @@
         }
         
         // ========== TAB ANALISI ==========
+        /**
+         * @description Calculates and displays statistics for the year.
+         */
         function calcolaStatistiche() {
             let lavoro = 0, riposo = 0, notti = 0, ore = 0, weekendLiberi = 0;
             
@@ -748,6 +822,9 @@
             calcolaFerieSmart();
         }
         
+        /**
+         * @description Calculates and displays the maximum number of consecutive night shifts.
+         */
         function calcolaNottiConsecutive() {
             let maxConsec = 0, currentConsec = 0;
             let maxStart = null, currentStart = null;
@@ -780,6 +857,9 @@
             `;
         }
         
+        /**
+         * @description Calculates and displays the next available free weekends.
+         */
         function calcolaWeekendLiberi() {
             const container = document.getElementById('weekend-liberi');
             container.innerHTML = '';
@@ -811,6 +891,9 @@
             }
         }
         
+        /**
+         * @description Provides suggestions for "smart" vacation days to maximize time off.
+         */
         function calcolaFerieSmart() {
             const container = document.getElementById('ferie-smart');
             container.innerHTML = '';
@@ -867,6 +950,9 @@
         }
         
         // ========== TAB SQUADRA ==========
+        /**
+         * @description Renders the list of colleagues and their shifts.
+         */
         function renderizzaColleghi() {
             const lista = document.getElementById('colleghi-lista');
             lista.innerHTML = '';
@@ -897,6 +983,9 @@
             });
         }
         
+        /**
+         * @description Shows the modal for adding a new colleague.
+         */
         function mostraModalCollega() {
             mostraModal(`
                 <div class="modal-title">Aggiungi Collega</div>
@@ -912,6 +1001,9 @@
             `);
         }
         
+        /**
+         * @description Adds a new colleague to the list and saves it to local storage.
+         */
         function aggiungiCollega() {
             const nome = document.getElementById('collega-nome').value.trim();
             const offset = parseInt(document.getElementById('collega-offset').value);
@@ -924,6 +1016,10 @@
             }
         }
         
+        /**
+         * @description Removes a colleague from the list and updates local storage.
+         * @param {number} idx - The index of the colleague to remove.
+         */
         function rimuoviCollega(idx) {
             colleghi.splice(idx, 1);
             localStorage.setItem('colleghi', JSON.stringify(colleghi));
@@ -931,6 +1027,9 @@
         }
         
         // ========== EXPORT ==========
+        /**
+         * @description Exports the shift schedule as an ICS file for calendar import.
+         */
         function esportaICS() {
             let ics = `BEGIN:VCALENDAR
 VERSION:2.0
@@ -1028,6 +1127,9 @@ END:VEVENT
             `);
         }
         
+        /**
+         * @description Copies the current month's shifts to the clipboard as text.
+         */
         function copiaTurniMese() {
             let testo = `TURNI ${MESI[meseCorrente].toUpperCase()} 2026\n\n`;
             
@@ -1047,6 +1149,9 @@ END:VEVENT
             });
         }
         
+        /**
+         * @description Shows a confirmation modal for resetting all data.
+         */
         function resetDati() {
             mostraModal(`
                 <div class="modal-title">⚠️ Reset Dati</div>
@@ -1056,6 +1161,9 @@ END:VEVENT
             `);
         }
         
+        /**
+         * @description Clears all data from local storage and resets the colleague list.
+         */
         function confermaReset() {
             localStorage.clear();
             colleghi = [];
@@ -1064,6 +1172,10 @@ END:VEVENT
         }
         
         // ========== UI HELPERS ==========
+        /**
+         * @description Switches between tabs in the UI.
+         * @param {string} nome - The name of the tab to switch to.
+         */
         function cambiaTab(nome) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -1075,6 +1187,10 @@ END:VEVENT
             if (nome === 'squadra') renderizzaColleghi();
         }
         
+        /**
+         * @description Displays a modal with the given content.
+         * @param {string} content - The HTML content to display in the modal.
+         */
         function mostraModal(content) {
             document.getElementById('modal-container').innerHTML = `
                 <div class="modal" onclick="chiudiModal()">
@@ -1085,11 +1201,17 @@ END:VEVENT
             `;
         }
         
+        /**
+         * @description Closes the currently displayed modal.
+         */
         function chiudiModal() {
             document.getElementById('modal-container').innerHTML = '';
         }
         
         // ========== INIT ==========
+        /**
+         * @description Initializes the application.
+         */
         aggiornaOggi();
         renderizzaMese();
         setInterval(() => {
